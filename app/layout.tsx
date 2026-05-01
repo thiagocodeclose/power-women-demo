@@ -1,6 +1,7 @@
 // @ts-nocheck
 import type { Metadata } from 'next';
 
+import { KorivaLivePreview } from '@/components/KorivaLivePreview';
 export const metadata: Metadata = {
   title: "POWER Women's Gym — Strength & Empowerment Training | Brooklyn, NY",
   description:
@@ -12,7 +13,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const vars = buildCssVars(cfg?.brand);
   return (
     <html lang="en" style={vars as React.CSSProperties}>
-      <body>{children}</body>
+      <body>{children}<KorivaLivePreview /></body>
     </html>
   );
 }
