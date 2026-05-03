@@ -439,10 +439,10 @@ export default function Home() {
       {/* ── INTRO STRIP ── */}
       <section className="pw-intro">
         <div className="pw-intro-inner">
-          <h2 className="pw-intro-headline pw-head reveal">
+          <h2 data-cg-el="hero_headline_1" className="pw-intro-headline pw-head reveal">
             Train Strong.<br />Live Loud.
           </h2>
-          <p className="pw-intro-body reveal">{siteData.hero.subtitle}</p>
+          <p data-cg-el="hero_subtitle" className="pw-intro-body reveal">{siteData.hero.subtitle}</p>
         </div>
       </section>
 
