@@ -1,27 +1,30 @@
 // @ts-nocheck
-'use client';
+"use client";
 
-import { useEffect, useRef, useState } from 'react';
-import { Raleway, Nunito_Sans } from 'next/font/google';
-import siteData from '@/lib/site-data';
+import { useEffect, useRef, useState } from "react";
+import { Raleway, Nunito_Sans } from "next/font/google";
+import siteData from "@/lib/site-data";
 
 const raleway = Raleway({
-  subsets: ['latin'],
-  variable: '--pw-font-head',
+  subsets: ["latin"],
+  variable: "--pw-font-head",
 });
 
 const nunitoSans = Nunito_Sans({
-  subsets: ['latin'],
-  variable: '--pw-font-body',
+  subsets: ["latin"],
+  variable: "--pw-font-body",
 });
 
 function useReveal() {
   useEffect(() => {
     const observer = new IntersectionObserver(
-      (entries) => entries.forEach((e) => e.target.classList.toggle('visible', e.isIntersecting)),
-      { threshold: 0.12 }
+      (entries) =>
+        entries.forEach((e) =>
+          e.target.classList.toggle("visible", e.isIntersecting),
+        ),
+      { threshold: 0.12 },
     );
-    document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+    document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
     return () => observer.disconnect();
   }, []);
 }
@@ -34,8 +37,8 @@ export default function Home() {
 
   useEffect(() => {
     const onScroll = () => setNavActive(window.scrollY > 60);
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   const css = `
@@ -390,44 +393,61 @@ export default function Home() {
     }
   `;
 
-  const pillarIcons = ['🏋️', '🧠', '🤝', '🥗'];
+  const pillarIcons = ["🏋️", "🧠", "🤝", "🥗"];
 
   return (
     <main className={`${raleway.variable} ${nunitoSans.variable}`}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
 
       {/* ── NAV ── */}
-      <nav className={`pw-nav${navActive ? ' active' : ''}`}>
+      <nav className={`pw-nav${navActive ? " active" : ""}`}>
         <div className="pw-logo pw-head">
           <span>P</span>OWER
         </div>
         <ul className="pw-nav-links">
-          <li><a href="#approach">Approach</a></li>
-          <li><a href="#programs">Programs</a></li>
-          <li><a href="#pricing">Pricing</a></li>
-          <li><a href="#contact">Contact</a></li>
+          <li>
+            <a href="#approach">Approach</a>
+          </li>
+          <li>
+            <a href="#programs">Programs</a>
+          </li>
+          <li>
+            <a href="#pricing">Pricing</a>
+          </li>
+          <li>
+            <a href="#contact">Contact</a>
+          </li>
         </ul>
-        <a href="#trial" className="pw-nav-cta">Free Trial</a>
+        <a href="#trial" className="pw-nav-cta">
+          Free Trial
+        </a>
         <button
           className="pw-hamburger"
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label="Menu"
         >
-          <span /><span /><span />
+          <span />
+          <span />
+          <span />
         </button>
       </nav>
 
       {/* ── HERO — CINEMATIC TOP ── */}
       <section className="pw-hero-video">
         <video ref={videoRef} autoPlay muted loop playsInline>
-          <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4" />
+          <source
+            src="https://www.w3schools.com/html/mov_bbb.mp4"
+            type="video/mp4"
+          />
         </video>
         <div className="pw-hero-overlay" />
         <div className="pw-hero-wordmark">
           <div className="pw-wordmark-text pw-head">
             <span className="pw-accent">P</span>OWER
           </div>
-          <div className="pw-wordmark-sub">Women&apos;s Strength Gym · Brooklyn, NY</div>
+          <div className="pw-wordmark-sub">
+            Women&apos;s Strength Gym · Brooklyn, NY
+          </div>
         </div>
         <div className="pw-scroll-hint">
           <div className="pw-scroll-dot" />
@@ -439,10 +459,17 @@ export default function Home() {
       {/* ── INTRO STRIP ── */}
       <section className="pw-intro">
         <div className="pw-intro-inner">
-          <h2 data-cg-el="hero_headline_1" className="pw-intro-headline pw-head reveal">
-            Train Strong.<br />Live Loud.
+          <h2
+            data-cg-el="hero_headline_1"
+            className="pw-intro-headline pw-head reveal"
+          >
+            Train Strong.
+            <br />
+            Live Loud.
           </h2>
-          <p data-cg-el="hero_subtitle" className="pw-intro-body reveal">{siteData.hero.subtitle}</p>
+          <p data-cg-el="hero_subtitle" className="pw-intro-body reveal">
+            {siteData.hero.subtitle}
+          </p>
         </div>
       </section>
 
@@ -450,7 +477,11 @@ export default function Home() {
       <section className="pw-stats-strip">
         <div className="pw-stats-inner">
           {siteData.stats.map((s, i) => (
-            <div key={i} className="reveal" style={{ transitionDelay: `${i * 0.1}s` }}>
+            <div
+              key={i}
+              className="reveal"
+              style={{ transitionDelay: `${i * 0.1}s` }}
+            >
               <span className="pw-strip-num pw-head">{s.value}</span>
               <span className="pw-strip-label">{s.label}</span>
             </div>
@@ -463,10 +494,13 @@ export default function Home() {
         <div className="pw-section-inner">
           <p className="pw-section-label reveal">Our Approach</p>
           <h2 className="pw-section-title pw-head reveal">
-            Built on four pillars<br />that actually work.
+            Built on four pillars
+            <br />
+            that actually work.
           </h2>
           <p className="pw-section-sub reveal">
-            Everything we do is designed to help women get stronger — in body, mind, and community.
+            Everything we do is designed to help women get stronger — in body,
+            mind, and community.
           </p>
           <div className="pw-pillars-grid">
             {siteData.pillars.map((p, i) => (
@@ -489,7 +523,9 @@ export default function Home() {
         <div className="pw-section-inner">
           <p className="pw-section-label reveal">Programs</p>
           <h2 className="pw-section-title pw-head reveal">
-            A program for every<br />woman, every goal.
+            A program for every
+            <br />
+            woman, every goal.
           </h2>
           <div className="pw-programs-grid">
             {siteData.programs.map((p, i) => (
@@ -516,25 +552,34 @@ export default function Home() {
         <div className="pw-section-inner">
           <p className="pw-section-label reveal">Membership</p>
           <h2 className="pw-section-title pw-head reveal">
-            Invest in your<br />strongest self.
+            Invest in your
+            <br />
+            strongest self.
           </h2>
           <div className="pw-pricing-grid">
             {siteData.pricing.map((p, i) => (
               <div
-                className={`pw-price-card reveal${p.featured ? ' featured' : ''}`}
+                className={`pw-price-card reveal${p.featured ? " featured" : ""}`}
                 key={i}
                 style={{ transitionDelay: `${i * 0.1}s` }}
               >
-                {p.featured && <div className="pw-price-badge">Most Popular</div>}
+                {p.featured && (
+                  <div className="pw-price-badge">Most Popular</div>
+                )}
                 <div className="pw-price-name">{p.name}</div>
                 <div className="pw-price-amount">
-                  ${p.price}<span>/mo</span>
+                  ${p.price}
+                  <span>/mo</span>
                 </div>
                 <p className="pw-price-desc">{p.desc}</p>
                 <ul className="pw-price-features">
-                  {p.features.map((f, j) => <li key={j}>{f}</li>)}
+                  {p.features.map((f, j) => (
+                    <li key={j}>{f}</li>
+                  ))}
                 </ul>
-                <a href="#trial" className="pw-price-cta">Get Started</a>
+                <a href="#trial" className="pw-price-cta">
+                  Get Started
+                </a>
               </div>
             ))}
           </div>
@@ -545,10 +590,14 @@ export default function Home() {
       <section className="pw-cta" id="trial">
         <p className="pw-cta-label reveal">First Week Free</p>
         <h2 className="pw-cta-title pw-head reveal">
-          Your strongest chapter<br />starts here.
+          Your strongest chapter
+          <br />
+          starts here.
         </h2>
         <p className="pw-cta-sub reveal">{siteData.cta.subtitle}</p>
-        <a href="#contact" className="pw-btn-white reveal">Claim Free Trial</a>
+        <a href="#contact" className="pw-btn-white reveal">
+          Claim Free Trial
+        </a>
       </section>
 
       {/* ── FOOTER ── */}
@@ -558,11 +607,17 @@ export default function Home() {
             <span>P</span>OWER
           </div>
           <ul className="pw-footer-links">
-            <li><a href="#approach">Approach</a></li>
-            <li><a href="#programs">Programs</a></li>
-            <li><a href="#pricing">Pricing</a></li>
+            <li>
+              <a href="#approach">Approach</a>
+            </li>
+            <li>
+              <a href="#programs">Programs</a>
+            </li>
+            <li>
+              <a href="#pricing">Pricing</a>
+            </li>
           </ul>
-          <div style={{ fontSize: '13px', color: 'rgba(248,240,255,0.45)' }}>
+          <div style={{ fontSize: "13px", color: "rgba(248,240,255,0.45)" }}>
             {siteData.contact.address} · {siteData.contact.phone}
           </div>
         </div>
