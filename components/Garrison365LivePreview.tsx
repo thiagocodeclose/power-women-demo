@@ -28,8 +28,8 @@ export interface Garrison365ElementPayload {
   letterSpacing?: number;
   lineHeight?: number;
   visibleMobile?: boolean;
-  focalX?: number;   // 0-100 — image focal point horizontal
-  focalY?: number;   // 0-100 — image focal point vertical
+  focalX?: number; // 0-100 — image focal point horizontal
+  focalY?: number; // 0-100 — image focal point vertical
   animation?: string; // 'none' | 'fade' | 'slide-left' | 'slide-right' | 'zoom' | 'slide-up'
   sectionBg?: string; // for GARRISON365_CUSTOMIZE section backgrounds
 }
@@ -151,41 +151,50 @@ export function Garrison365LivePreview() {
           });
         }
         // section_video_backgrounds — inject/remove <video> elements per section
-        if ((p as any).section_video_backgrounds && typeof (p as any).section_video_backgrounds === 'object') {
-          Object.entries((p as any).section_video_backgrounds as Record<string, string>).forEach(([sectionId, url]) => {
-            const sectionEl = (
-              document.getElementById(sectionId) ||
+        if (
+          (p as any).section_video_backgrounds &&
+          typeof (p as any).section_video_backgrounds === "object"
+        ) {
+          Object.entries(
+            (p as any).section_video_backgrounds as Record<string, string>,
+          ).forEach(([sectionId, url]) => {
+            const sectionEl = (document.getElementById(sectionId) ||
               document.querySelector(`[data-section="${sectionId}"]`) ||
-              document.querySelector(`section.${sectionId}`)
-            ) as HTMLElement | null;
+              document.querySelector(
+                `section.${sectionId}`,
+              )) as HTMLElement | null;
             if (!sectionEl) return;
             // Remove existing video bg if any
-            const existing = sectionEl.querySelector('.garrison365-video-bg') as HTMLElement | null;
+            const existing = sectionEl.querySelector(
+              ".garrison365-video-bg",
+            ) as HTMLElement | null;
             if (existing) existing.remove();
             if (!url) return;
             // Ensure section can contain absolute-positioned children
             const pos = window.getComputedStyle(sectionEl).position;
-            if (pos === 'static') sectionEl.style.position = 'relative';
-            sectionEl.style.overflow = 'hidden';
+            if (pos === "static") sectionEl.style.position = "relative";
+            sectionEl.style.overflow = "hidden";
             // Create video element
-            const wrapper = document.createElement('div');
-            wrapper.className = 'garrison365-video-bg';
-            wrapper.style.cssText = 'position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;';
-            const video = document.createElement('video');
+            const wrapper = document.createElement("div");
+            wrapper.className = "garrison365-video-bg";
+            wrapper.style.cssText =
+              "position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;";
+            const video = document.createElement("video");
             video.src = url;
             video.autoplay = true;
             video.muted = true;
             video.loop = true;
             video.playsInline = true;
-            video.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;';
+            video.style.cssText =
+              "position:absolute;inset:0;width:100%;height:100%;object-fit:cover;";
             wrapper.appendChild(video);
             sectionEl.insertBefore(wrapper, sectionEl.firstChild);
             // Ensure section content sits above video
             Array.from(sectionEl.children).forEach((child) => {
               const c = child as HTMLElement;
-              if (!c.classList.contains('garrison365-video-bg')) {
-                c.style.position = 'relative';
-                c.style.zIndex = '1';
+              if (!c.classList.contains("garrison365-video-bg")) {
+                c.style.position = "relative";
+                c.style.zIndex = "1";
               }
             });
           });
@@ -250,18 +259,100 @@ export function Garrison365LivePreview() {
           requestAnimationFrame(() =>
             requestAnimationFrame(() => {
               const registry = window.__GARRISON365_REGISTRY__;
-              if (!registry) return;
-              const elements = Array.from(registry.entries()).map(
-                ([id, data]) => ({
-                  id,
-                  section: data.meta?.section ?? id.split("_")[0],
-                  label:
-                    data.meta?.label ??
-                    id.replace(/^[^_]+_/, "").replace(/_/g, " "),
-                  type: data.meta?.type ?? "text",
-                  defaults: data.defaults,
-                }),
-              );
+              const elementsMap = new Map<
+                string,
+                {
+                  id: string;
+                  section: string;
+                  label: string;
+                  type: string;
+                  defaults?: Record<string, unknown>;
+                  content?: string;
+                }
+              >();
+              const makeLabel = (id: string) => {
+                const label = id.replace(/^[^_]+_/, "").replace(/_/g, " ");
+                return label.charAt(0).toUpperCase() + label.slice(1);
+              };
+              let autoTextIndex = 0;
+              const ensureEditableId = (domEl: Element) => {
+                const existing = domEl.getAttribute("data-cg-el");
+                if (existing) return existing;
+                const binding = domEl.getAttribute("data-garrison-text");
+                const el = domEl as HTMLElement;
+                const text = el.innerText?.trim().replace(/\s+/g, " ");
+                if (!binding) {
+                  if (
+                    !text ||
+                    text.length < 2 ||
+                    el.closest("[hidden], [aria-hidden='true']") ||
+                    el.querySelector("[data-cg-el], [data-garrison-text]")
+                  ) {
+                    return null;
+                  }
+                  autoTextIndex += 1;
+                }
+                const source = binding || `text.${text}.${autoTextIndex}`;
+                const id = source
+                  .replace(/[^a-zA-Z0-9]+/g, "_")
+                  .replace(/^_+|_+$/g, "")
+                  .slice(0, 64)
+                  .toLowerCase();
+                if (!id) return null;
+                domEl.setAttribute("data-cg-el", id);
+                return id;
+              };
+
+              if (registry) {
+                Array.from(registry.entries()).forEach(([id, data]) => {
+                  const domEl = document.querySelector(
+                    `[data-cg-el="${id}"]`,
+                  ) as HTMLElement | null;
+                  const isImage =
+                    domEl?.tagName === "IMG" || !!domEl?.querySelector("img");
+                  const currentContent =
+                    !isImage && domEl
+                      ? domEl.innerText?.trim() || undefined
+                      : undefined;
+                  elementsMap.set(id, {
+                    id,
+                    section: data.meta?.section ?? id.split("_")[0],
+                    label: data.meta?.label ?? makeLabel(id),
+                    type: data.meta?.type ?? "text",
+                    defaults: data.defaults,
+                    content: currentContent,
+                  });
+                });
+              }
+
+              document
+                .querySelectorAll(
+                  "[data-cg-el], [data-garrison-text], h1, h2, h3, p, a, button, span, li, strong",
+                )
+                .forEach((domEl) => {
+                  const id = ensureEditableId(domEl);
+                  if (!id || elementsMap.has(id)) return;
+                  const el = domEl as HTMLElement;
+                  const isImage =
+                    el.tagName === "IMG" || !!el.querySelector("img");
+                  const type = isImage
+                    ? "image"
+                    : el.tagName === "A" || el.getAttribute("role") === "button"
+                      ? "button"
+                      : "text";
+                  const currentContent = !isImage
+                    ? el.innerText?.trim() || undefined
+                    : undefined;
+                  elementsMap.set(id, {
+                    id,
+                    section: id.split("_")[0],
+                    label: makeLabel(id),
+                    type,
+                    content: currentContent,
+                  });
+                });
+
+              const elements = Array.from(elementsMap.values());
               const templateId =
                 document.documentElement.dataset.templateId ?? "unknown";
               const templateVersion =
@@ -386,7 +477,11 @@ export function Garrison365LivePreview() {
             imgEl.src = content;
           } else {
             root.style.setProperty(`--cg-el-${id}-content`, content);
-            if (cgEl && cgEl.tagName !== "INPUT" && cgEl.tagName !== "TEXTAREA") {
+            if (
+              cgEl &&
+              cgEl.tagName !== "INPUT" &&
+              cgEl.tagName !== "TEXTAREA"
+            ) {
               if (!cgEl.querySelector("[data-cg-el]")) {
                 cgEl.textContent = content;
               }
@@ -493,15 +588,21 @@ export function Garrison365LivePreview() {
         }
         if (visibleMobile !== undefined && cgEl) {
           if (visibleMobile === false) {
-            cgEl.classList.add('k-hide-mobile');
+            cgEl.classList.add("k-hide-mobile");
           } else {
-            cgEl.classList.remove('k-hide-mobile');
+            cgEl.classList.remove("k-hide-mobile");
           }
         }
         if (animation !== undefined && cgEl) {
-          cgEl.classList.remove('k-anim-fade', 'k-anim-slide-left', 'k-anim-slide-right', 'k-anim-zoom', 'k-anim-slide-up');
-          cgEl.classList.remove('k-anim-done');
-          if (animation && animation !== 'none') {
+          cgEl.classList.remove(
+            "k-anim-fade",
+            "k-anim-slide-left",
+            "k-anim-slide-right",
+            "k-anim-zoom",
+            "k-anim-slide-up",
+          );
+          cgEl.classList.remove("k-anim-done");
+          if (animation && animation !== "none") {
             cgEl.classList.add(`k-anim-${animation}`);
             if (window.__GARRISON365_ANIM_OBSERVER__) {
               window.__GARRISON365_ANIM_OBSERVER__.unobserve(cgEl);
@@ -768,7 +869,10 @@ export function Garrison365LivePreview() {
         const newSize = Math.round(
           parseFloat(d.el.style.fontSize) || d.origFontSize,
         );
-        const payload: Garrison365ElementPayload = { id: d.id, fontSize: newSize };
+        const payload: Garrison365ElementPayload = {
+          id: d.id,
+          fontSize: newSize,
+        };
         window.parent.postMessage(
           { type: "GARRISON365_ELEMENT_RESIZED", payload },
           "*",
