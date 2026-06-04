@@ -401,7 +401,7 @@ export default function Home() {
 
       {/* ── NAV ── */}
       <nav className={`pw-nav${navActive ? " active" : ""}`}>
-        <div className="pw-logo pw-head">
+        <div className="pw-logo pw-head" data-garrison-text="gym.name">
           <span>P</span>OWER
         </div>
         <ul className="pw-nav-links">
@@ -418,7 +418,11 @@ export default function Home() {
             <a href="#contact">Contact</a>
           </li>
         </ul>
-        <a href="#trial" className="pw-nav-cta">
+        <a
+          href="#trial"
+          className="pw-nav-cta"
+          data-garrison-href="brand.book_class_url"
+        >
           Free Trial
         </a>
         <button
@@ -433,7 +437,10 @@ export default function Home() {
       </nav>
 
       {/* ── HERO — CINEMATIC TOP ── */}
-      <section className="pw-hero-video">
+      <section
+        className="pw-hero-video"
+        data-garrison-component="media_carousel"
+      >
         <video ref={videoRef} autoPlay muted loop playsInline>
           <source
             src="https://www.w3schools.com/html/mov_bbb.mp4"
@@ -442,10 +449,13 @@ export default function Home() {
         </video>
         <div className="pw-hero-overlay" />
         <div className="pw-hero-wordmark">
-          <div className="pw-wordmark-text pw-head">
+          <div
+            className="pw-wordmark-text pw-head"
+            data-garrison-text="gym.name"
+          >
             <span className="pw-accent">P</span>OWER
           </div>
-          <div className="pw-wordmark-sub">
+          <div className="pw-wordmark-sub" data-garrison-text="brand.tagline">
             Women&apos;s Strength Gym · Brooklyn, NY
           </div>
         </div>
@@ -457,17 +467,22 @@ export default function Home() {
       </section>
 
       {/* ── INTRO STRIP ── */}
-      <section className="pw-intro">
+      <section className="pw-intro" data-garrison-component="book_class">
         <div className="pw-intro-inner">
           <h2
             data-cg-el="hero_headline_1"
+            data-garrison-text="brand.hero_headline"
             className="pw-intro-headline pw-head reveal"
           >
             Train Strong.
             <br />
             Live Loud.
           </h2>
-          <p data-cg-el="hero_subtitle" className="pw-intro-body reveal">
+          <p
+            data-cg-el="hero_subtitle"
+            data-garrison-text="brand.tagline"
+            className="pw-intro-body reveal"
+          >
             {siteData.hero.subtitle}
           </p>
         </div>
@@ -519,7 +534,11 @@ export default function Home() {
       </section>
 
       {/* ── PROGRAMS ── */}
-      <section className="pw-section" id="programs">
+      <section
+        className="pw-section"
+        id="programs"
+        data-garrison-component="classes_catalog"
+      >
         <div className="pw-section-inner">
           <p className="pw-section-label reveal">Programs</p>
           <h2 className="pw-section-title pw-head reveal">
@@ -548,7 +567,11 @@ export default function Home() {
       </section>
 
       {/* ── PRICING ── */}
-      <section className="pw-section pw-pricing" id="pricing">
+      <section
+        className="pw-section pw-pricing"
+        id="pricing"
+        data-garrison-component="pricing"
+      >
         <div className="pw-section-inner">
           <p className="pw-section-label reveal">Membership</p>
           <h2 className="pw-section-title pw-head reveal">
@@ -577,7 +600,11 @@ export default function Home() {
                     <li key={j}>{f}</li>
                   ))}
                 </ul>
-                <a href="#trial" className="pw-price-cta">
+                <a
+                  href="#trial"
+                  className="pw-price-cta"
+                  data-garrison-href="brand.buy_classes_url"
+                >
                   Get Started
                 </a>
               </div>
@@ -587,21 +614,56 @@ export default function Home() {
       </section>
 
       {/* ── CTA ── */}
-      <section className="pw-cta" id="trial">
-        <p className="pw-cta-label reveal">First Week Free</p>
-        <h2 className="pw-cta-title pw-head reveal">
+      <section
+        className="pw-cta"
+        id="trial"
+        data-garrison-component="lead_capture"
+      >
+        <p
+          className="pw-cta-label reveal"
+          data-garrison-text="brand.intro_offer.badge"
+        >
+          First Week Free
+        </p>
+        <h2
+          className="pw-cta-title pw-head reveal"
+          data-garrison-text="brand.intro_offer.title"
+        >
           Your strongest chapter
           <br />
           starts here.
         </h2>
-        <p className="pw-cta-sub reveal">{siteData.cta.subtitle}</p>
-        <a href="#contact" className="pw-btn-white reveal">
+        <p
+          className="pw-cta-sub reveal"
+          data-garrison-text="brand.intro_offer.subtitle"
+        >
+          {siteData.cta.subtitle}
+        </p>
+        <a
+          href="#contact"
+          className="pw-btn-white reveal"
+          data-garrison-href="brand.book_class_url"
+          data-garrison-text="brand.intro_offer.cta"
+        >
           Claim Free Trial
         </a>
       </section>
 
+      <div hidden aria-hidden="true">
+        <div data-garrison-widget="ai_agent" />
+        <div data-garrison-widget="class_schedule" />
+        <div data-garrison-widget="pricing" />
+        <div data-garrison-widget="classes_catalog" />
+        <div data-garrison-widget="lead_capture" />
+        <div data-garrison-widget="promo_banner" />
+      </div>
+
       {/* ── FOOTER ── */}
-      <footer className="pw-footer" id="contact">
+      <footer
+        className="pw-footer"
+        id="contact"
+        data-garrison-component="location_map"
+      >
         <div className="pw-footer-inner">
           <div className="pw-footer-logo pw-head">
             <span>P</span>OWER
