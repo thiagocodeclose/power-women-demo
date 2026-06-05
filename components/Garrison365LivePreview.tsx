@@ -46,6 +46,311 @@ interface OverlayRect {
 type DragType = "move" | "resize";
 type HandlePos = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w";
 
+type WebsiteFeaturePayload = Record<string, any>;
+
+const WEBSITE_FEATURE_ALIASES: Record<string, string> = {
+  ai_agent: "ai_agent",
+  chat: "ai_agent",
+  schedule: "class_schedule",
+  class_schedule: "class_schedule",
+  classes: "classes_catalog",
+  classes_catalog: "classes_catalog",
+  pricing: "pricing",
+  info: "location_map",
+  location: "location_map",
+  location_map: "location_map",
+  promo_banners: "promo_banner",
+  promo_banner: "promo_banner",
+  announcement_bar: "announcement_bar",
+  lead_capture: "lead_capture",
+  lead_capture_form: "lead_capture",
+  faq: "faq",
+  reviews: "reviews",
+  testimonials: "reviews",
+  press: "press_logos",
+  press_logos: "press_logos",
+  instructors: "instructors",
+  teachers: "instructors",
+  media_carousel: "media_carousel",
+  member_portal: "member_portal",
+  programs: "programs",
+};
+
+const TOGGLEABLE_COMPONENTS = new Set([
+  "classes_catalog",
+  "pricing",
+  "media_carousel",
+  "lead_capture",
+  "location_map",
+  "promo_banner",
+  "faq",
+  "reviews",
+  "press_logos",
+  "instructors",
+  "member_portal",
+  "programs",
+  "announcement_bar",
+]);
+
+function canonicalFeatureName(value?: string | null) {
+  if (!value) return "";
+  return WEBSITE_FEATURE_ALIASES[value] || value;
+}
+
+function featureEnabled(payload: WebsiteFeaturePayload, feature: string) {
+  switch (feature) {
+    case "ai_agent":
+      return (
+        payload.show_ai_agent !== false && payload.widgets_ai_chat !== false
+      );
+    case "pricing":
+      return (
+        payload.show_buy_classes !== false && payload.show_pricing !== false
+      );
+    case "promo_banner":
+      return payload.show_promo_banner !== false;
+    case "announcement_bar":
+      return (
+        payload.show_announcement_bar === true ||
+        payload.announcement_enabled === true
+      );
+    case "lead_capture":
+      return payload.show_lead_capture !== false;
+    case "faq":
+      return payload.show_faq !== false;
+    case "reviews":
+      return (
+        payload.show_testimonials !== false && payload.show_reviews !== false
+      );
+    case "press_logos":
+      return payload.show_press_logos !== false;
+    case "media_carousel":
+      return payload.show_media_carousel !== false;
+    case "location_map":
+      return payload.show_location_map !== false;
+    case "instructors":
+      return payload.show_instructors !== false;
+    case "member_portal":
+      return (
+        payload.show_member_portal === true || payload.portal_enabled === true
+      );
+    case "programs":
+      return (
+        payload.show_programs === true || payload.widgets_programs === true
+      );
+    case "classes_catalog":
+    case "class_schedule":
+      return payload.show_schedule !== false && payload.show_classes !== false;
+    default:
+      return true;
+  }
+}
+
+function ensureUniversalStyle() {
+  if (document.getElementById("g365-universal-style")) return;
+  const style = document.createElement("style");
+  style.id = "g365-universal-style";
+  style.textContent = `
+    .g365-universal-section { padding: 72px 24px; background: var(--cg-bg, #0b0b0b); color: var(--cg-text, inherit); }
+    .g365-universal-inner { max-width: 1120px; margin: 0 auto; }
+    .g365-universal-kicker { color: var(--cg-primary, #7c3aed); text-transform: uppercase; letter-spacing: .18em; font-size: 12px; font-weight: 800; margin-bottom: 12px; }
+    .g365-universal-title { font-size: clamp(32px, 5vw, 58px); line-height: 1; margin: 0 0 18px; }
+    .g365-universal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+    .g365-universal-card { border: 1px solid color-mix(in srgb, currentColor 16%, transparent); border-radius: 18px; padding: 22px; background: color-mix(in srgb, var(--cg-bg, #0b0b0b) 86%, currentColor 8%); }
+    .g365-universal-card p { opacity: .72; line-height: 1.55; margin: 8px 0 0; }
+    .g365-promo-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; display: flex; justify-content: center; align-items: center; gap: 18px; padding: 14px 20px; background: var(--g365-promo-bg, var(--cg-primary, #2d275f)); color: var(--g365-promo-text, #fff); font-weight: 900; text-transform: uppercase; letter-spacing: .08em; }
+    .g365-promo-bar a, .g365-universal-btn { color: inherit; border: 1px solid currentColor; border-radius: 999px; padding: 9px 16px; text-decoration: none; }
+    .g365-ai-agent { position: fixed; right: 20px; bottom: 78px; z-index: 61; width: min(380px, calc(100vw - 32px)); border-radius: 20px; overflow: hidden; box-shadow: 0 24px 70px rgba(0,0,0,.24); background: #fff; color: #111; }
+    .g365-ai-agent iframe { width: 100%; height: 520px; border: 0; display: block; }
+    .g365-ai-bubble { padding: 14px 16px; display: flex; gap: 12px; align-items: center; }
+    .g365-ai-dot { width: 42px; height: 42px; border-radius: 999px; background: var(--cg-primary, #7c3aed); color: #fff; display: grid; place-items: center; font-weight: 900; flex: 0 0 auto; }
+    .g365-intro-modal { position: fixed; inset: 0; z-index: 70; display: none; place-items: center; background: rgba(0,0,0,.38); padding: 24px; }
+    .g365-intro-modal.active { display: grid; }
+    .g365-intro-card { width: min(720px, 96vw); border-radius: 24px; overflow: hidden; background: var(--g365-offer-bg, #fff); color: var(--g365-offer-text, #241f5f); box-shadow: 0 32px 100px rgba(0,0,0,.32); padding: 42px; text-align: center; }
+    .g365-intro-card h2 { font-size: clamp(42px, 8vw, 82px); line-height: .95; margin: 0 0 18px; }
+    .g365-intro-card button, .g365-intro-card a { border: 0; border-radius: 999px; padding: 16px 28px; background: currentColor; color: var(--g365-offer-bg, #fff); text-decoration: none; text-transform: uppercase; font-weight: 900; letter-spacing: .12em; }
+    .g365-intro-close { position: absolute; top: 18px; right: 22px; background: transparent !important; color: inherit !important; padding: 0 !important; font-size: 28px; }
+    @media (max-width: 720px) { .g365-promo-bar { flex-direction: column; text-align: center; } .g365-ai-agent { left: 16px; right: 16px; bottom: 96px; width: auto; } }
+  `;
+  document.head.appendChild(style);
+}
+
+function upsertUniversal(id: string, enabled: boolean, html: string) {
+  const existing = document.getElementById(id);
+  if (!enabled) {
+    existing?.remove();
+    return null;
+  }
+  const wrapper = existing || document.createElement("div");
+  wrapper.id = id;
+  wrapper.innerHTML = html;
+  if (!existing) document.body.appendChild(wrapper);
+  return wrapper;
+}
+
+function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
+  ensureUniversalStyle();
+
+  const markerHost =
+    document.getElementById("g365-widget-markers") ||
+    document.createElement("div");
+  markerHost.id = "g365-widget-markers";
+  markerHost.hidden = true;
+  markerHost.setAttribute("aria-hidden", "true");
+  markerHost.innerHTML = Object.keys(WEBSITE_FEATURE_ALIASES)
+    .map((name) => `<div data-garrison-widget="${name}"></div>`)
+    .join("");
+  if (!markerHost.parentNode) document.body.appendChild(markerHost);
+
+  document.querySelectorAll("[data-garrison-component]").forEach((node) => {
+    const el = node as HTMLElement;
+    const feature = canonicalFeatureName(
+      el.getAttribute("data-garrison-component"),
+    );
+    if (TOGGLEABLE_COMPONENTS.has(feature)) {
+      el.style.display = featureEnabled(payload, feature) ? "" : "none";
+    }
+  });
+
+  const siteContent = payload.site_content || {};
+  const faqItems = (
+    siteContent.faq || [
+      {
+        question: "How do I book my first class?",
+        answer:
+          "Use the booking button and choose the best intro option for your schedule.",
+      },
+      {
+        question: "Do beginners need experience?",
+        answer:
+          "No. The studio can guide new members into the right class level.",
+      },
+      {
+        question: "Where is the studio located?",
+        answer:
+          payload.gym_address || "Add the studio address in Website settings.",
+      },
+    ]
+  ).slice(0, 4);
+  upsertUniversal(
+    "g365-universal-faq",
+    featureEnabled(payload, "faq") &&
+      !document.querySelector('[data-garrison-component="faq"]'),
+    `<section class="g365-universal-section" data-garrison-component="faq"><div class="g365-universal-inner"><p class="g365-universal-kicker">FAQ</p><h2 class="g365-universal-title" data-garrison-text="brand.faq_headline">${payload.faq_headline || "Questions, answered"}</h2><div class="g365-universal-grid">${faqItems
+      .map(
+        (item: any) =>
+          `<article class="g365-universal-card"><strong>${item.question || item}</strong><p>${item.answer || "Add the answer in Website content."}</p></article>`,
+      )
+      .join("")}</div></div></section>`,
+  );
+
+  const reviews = (
+    siteContent.reviews ||
+    siteContent.testimonials || [
+      {
+        quote: "A polished, high-converting studio experience.",
+        author: "Member review",
+      },
+      {
+        quote: "Clear classes, easy booking, and a premium first impression.",
+        author: "Studio client",
+      },
+    ]
+  ).slice(0, 3);
+  upsertUniversal(
+    "g365-universal-reviews",
+    featureEnabled(payload, "reviews") &&
+      !document.querySelector(
+        '[data-garrison-component="reviews"], [data-garrison-component="testimonials"]',
+      ),
+    `<section class="g365-universal-section" data-garrison-component="reviews"><div class="g365-universal-inner"><p class="g365-universal-kicker">Reviews</p><h2 class="g365-universal-title">Loved by members</h2><div class="g365-universal-grid">${reviews
+      .map(
+        (item: any) =>
+          `<article class="g365-universal-card"><strong>${item.author || item.name || "Member"}</strong><p>${item.quote || item.text || item.review || item}</p></article>`,
+      )
+      .join("")}</div></div></section>`,
+  );
+
+  upsertUniversal(
+    "g365-universal-press",
+    featureEnabled(payload, "press_logos") &&
+      !document.querySelector(
+        '[data-garrison-component="press_logos"], [data-garrison-component="press"]',
+      ),
+    `<section class="g365-universal-section" data-garrison-component="press_logos"><div class="g365-universal-inner"><p class="g365-universal-kicker">As seen in</p><div class="g365-universal-grid">${["Vogue", "Goop", "Shape", "Well+Good"].map((logo) => `<div class="g365-universal-card"><strong>${logo}</strong></div>`).join("")}</div></div></section>`,
+  );
+
+  const instructors = (siteContent.instructors || []).slice(0, 4);
+  upsertUniversal(
+    "g365-universal-instructors",
+    featureEnabled(payload, "instructors") &&
+      instructors.length > 0 &&
+      !document.querySelector(
+        '[data-garrison-component="instructors"], [data-garrison-component="teachers"]',
+      ),
+    `<section class="g365-universal-section" data-garrison-component="instructors"><div class="g365-universal-inner"><p class="g365-universal-kicker">Instructors</p><h2 class="g365-universal-title">Meet the team</h2><div class="g365-universal-grid">${instructors
+      .map(
+        (item: any) =>
+          `<article class="g365-universal-card"><strong>${item.website_name || item.name || item.full_name || "Instructor"}</strong><p>${item.website_bio || item.bio || item.website_title || item.title || "Certified studio instructor."}</p></article>`,
+      )
+      .join("")}</div></div></section>`,
+  );
+
+  upsertUniversal(
+    "g365-universal-location",
+    featureEnabled(payload, "location_map") &&
+      !document.querySelector(
+        '[data-garrison-component="location_map"], [data-garrison-component="info"]',
+      ),
+    `<section class="g365-universal-section" data-garrison-component="location_map"><div class="g365-universal-inner"><p class="g365-universal-kicker">Location</p><h2 class="g365-universal-title">${payload.location_headline || "Find us near you"}</h2><div class="g365-universal-card"><strong>${payload.gym_name || "Studio"}</strong><p>${payload.gym_address || [payload.local_neighborhood, payload.local_city].filter(Boolean).join(", ") || "Add address in Website settings."}</p>${payload.google_maps_url ? `<p><a class="g365-universal-btn" href="${payload.google_maps_url}">Open map</a></p>` : ""}</div></div></section>`,
+  );
+
+  upsertUniversal(
+    "g365-universal-promo",
+    featureEnabled(payload, "promo_banner"),
+    `<div class="g365-promo-bar" data-garrison-component="promo_banner" style="--g365-promo-bg:${payload.promo_bg_color || payload.primary_color || "#2d275f"};--g365-promo-text:${payload.promo_text_color || "#fff"}"><span data-garrison-text="brand.promo_text">${payload.promo_text || "New here? Unlock your intro offer."}</span><a data-garrison-text="brand.promo_cta" href="${payload.promo_url || payload.book_class_url || "#"}">${payload.promo_cta || "Claim offer"}</a></div>`,
+  );
+
+  const modal = upsertUniversal(
+    "g365-universal-intro-offer",
+    featureEnabled(payload, "promo_banner") &&
+      payload.show_intro_offer !== false,
+    `<div class="g365-intro-modal active" data-garrison-component="intro_offer"><div class="g365-intro-card" style="--g365-offer-bg:${payload.intro_offer_bg_color || "#fff"};--g365-offer-text:${payload.intro_offer_text_color || "#241f5f"}"><button class="g365-intro-close" type="button">x</button><h2 data-garrison-text="brand.intro_offer.title">${payload.intro_offer_title || "Exclusive Intro Offer"}<br>${payload.intro_offer_badge || "Save Today"}</h2><p data-garrison-text="brand.intro_offer.subtitle">${payload.intro_offer_subtitle || "Enter your email to claim your exclusive offer."}</p><a data-garrison-text="brand.intro_offer.cta" href="${payload.book_class_url || payload.promo_url || "#"}">${payload.intro_offer_cta || "Claim my offer"}</a></div></div>`,
+  );
+  modal?.querySelector(".g365-intro-close")?.addEventListener("click", () => {
+    modal.querySelector(".g365-intro-modal")?.classList.remove("active");
+  });
+
+  upsertUniversal(
+    "g365-universal-ai",
+    featureEnabled(payload, "ai_agent"),
+    `<div class="g365-ai-agent" data-garrison-component="ai_agent">${payload.ai_agent_widget_url ? `<iframe src="${payload.ai_agent_widget_url}" title="AI sales agent"></iframe>` : `<div class="g365-ai-bubble"><div class="g365-ai-dot">AI</div><div><strong>${payload.ai_agent_name || "AI Sales Agent"}</strong><p>${payload.ai_agent_greeting || "Need help choosing a class or offer?"}</p></div></div>`}</div>`,
+  );
+
+  const memberLinks = [];
+  if (featureEnabled(payload, "member_portal")) {
+    memberLinks.push(
+      `<a class="g365-universal-btn" data-garrison-component="member_portal" href="${payload.portal_url || "#"}">Member Portal</a>`,
+    );
+  }
+  if (featureEnabled(payload, "programs")) {
+    memberLinks.push(
+      `<a class="g365-universal-btn" data-garrison-component="programs" href="#programs">Programs</a>`,
+    );
+  }
+  upsertUniversal(
+    "g365-universal-member-links",
+    memberLinks.length > 0,
+    `<section class="g365-universal-section"><div class="g365-universal-inner"><div style="display:flex;gap:12px;flex-wrap:wrap">${memberLinks.join("")}</div></div></section>`,
+  );
+
+  upsertUniversal(
+    "g365-universal-announcement",
+    featureEnabled(payload, "announcement_bar"),
+    `<div class="g365-promo-bar" data-garrison-component="announcement_bar" style="top:0;bottom:auto;--g365-promo-bg:${payload.announcement_bg_color || payload.primary_color || "#7c3aed"};--g365-promo-text:${payload.announcement_text_color || "#fff"}"><span>${payload.announcement_text || "Studio announcement"}</span>${payload.announcement_url ? `<a href="${payload.announcement_url}">Learn more</a>` : ""}</div>`,
+  );
+}
+
 /**
  * Garrison365LivePreview — mounts inside the template iframe.
  *
@@ -134,6 +439,7 @@ export function Garrison365LivePreview() {
                   : r;
           root.style.setProperty("--cg-radius", px);
         }
+        applyWebsiteFeatureRuntime(p as any);
         // section_backgrounds (#8)
         if (
           p.section_backgrounds &&
