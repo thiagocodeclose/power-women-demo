@@ -3,7 +3,7 @@
 
 type WebsiteFeaturePayload = Record<string, any>;
 
-const GARRISON365_RUNTIME_VERSION = "2026-06-05-core-widget-coverage";
+const GARRISON365_RUNTIME_VERSION = "2026-06-05-shared-runtime-draft-published";
 
 const WEBSITE_FEATURE_ALIASES: Record<string, string> = {
   ai_agent: "ai_agent",
@@ -239,6 +239,7 @@ function markRenderedFeature(feature: string, rendered: boolean) {
 
 export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
   ensureUniversalStyle();
+  (window as any).GARRISON365_RUNTIME_VERSION = GARRISON365_RUNTIME_VERSION;
 
   const markerHost =
     document.getElementById("g365-widget-markers") ||
@@ -516,12 +517,18 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
     featureEnabled(payload, "promo_banner"),
     `<div class="g365-promo-bar" data-garrison-component="promo_banner" style="--g365-promo-bg:${payload.promo_bg_color || payload.primary_color || "#2d275f"};--g365-promo-text:${payload.promo_text_color || "#fff"}"><span data-garrison-text="brand.promo_text">${payload.promo_text || "New here? Unlock your intro offer."}</span><a data-garrison-text="brand.promo_cta" href="${payload.promo_url || payload.book_class_url || "#"}">${payload.promo_cta || "Claim offer"}</a></div>`,
   );
+  markRenderedFeature("promo_banner", featureEnabled(payload, "promo_banner"));
 
   const modal = upsertUniversal(
     "g365-universal-intro-offer",
     featureEnabled(payload, "promo_banner") &&
       payload.show_intro_offer !== false,
     `<div class="g365-intro-modal active" data-garrison-component="intro_offer"><div class="g365-intro-card" style="--g365-offer-bg:${payload.intro_offer_bg_color || "#fff"};--g365-offer-text:${payload.intro_offer_text_color || "#241f5f"}"><button class="g365-intro-close" type="button">x</button><h2 data-garrison-text="brand.intro_offer.title">${payload.intro_offer_title || "Exclusive Intro Offer"}<br>${payload.intro_offer_badge || "Save Today"}</h2><p data-garrison-text="brand.intro_offer.subtitle">${payload.intro_offer_subtitle || "Enter your email to claim your exclusive offer."}</p><a data-garrison-text="brand.intro_offer.cta" href="${payload.book_class_url || payload.promo_url || "#"}">${payload.intro_offer_cta || "Claim my offer"}</a></div></div>`,
+  );
+  markRenderedFeature(
+    "intro_offer",
+    featureEnabled(payload, "promo_banner") &&
+      payload.show_intro_offer !== false,
   );
   modal?.querySelector(".g365-intro-close")?.addEventListener("click", () => {
     modal.querySelector(".g365-intro-modal")?.classList.remove("active");
@@ -532,6 +539,7 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
     featureEnabled(payload, "ai_agent"),
     `<div class="g365-ai-agent" data-garrison-component="ai_agent">${payload.ai_agent_widget_url ? `<iframe src="${payload.ai_agent_widget_url}" title="AI sales agent"></iframe>` : `<div class="g365-ai-bubble"><div class="g365-ai-dot">AI</div><div><strong>${payload.ai_agent_name || "AI Sales Agent"}</strong><p>${payload.ai_agent_greeting || "Need help choosing a class or offer?"}</p></div></div>`}</div>`,
   );
+  markRenderedFeature("ai_agent", featureEnabled(payload, "ai_agent"));
 
   const classItems = limitItems(
     siteContent.classes || siteContent.class_catalog || [],
@@ -681,6 +689,7 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
         "</a></form></div>",
     ),
   );
+  markRenderedFeature("lead_capture", featureEnabled(payload, "lead_capture"));
 
   const mediaItems = limitItems(
     siteContent.media ||
@@ -731,28 +740,40 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
         "</div>",
     ),
   );
+  markRenderedFeature(
+    "media_carousel",
+    featureEnabled(payload, "media_carousel") && mediaItems.length > 0,
+  );
 
+  const memberPortalEnabled = featureEnabled(payload, "member_portal");
+  const programsEnabled = featureEnabled(payload, "programs");
   const memberLinks = [];
-  if (featureEnabled(payload, "member_portal")) {
+  if (memberPortalEnabled) {
     memberLinks.push(
-      `<a class="g365-universal-btn" data-garrison-component="member_portal" href="${payload.member_portal_url || payload.portal_url || (payload.base_url && payload.gym_slug ? payload.base_url + "/member/" + payload.gym_slug : "#")}">Member Portal</a>`,
+      `<article class="g365-universal-card" data-garrison-component="member_portal"><strong data-garrison-text="sections.member_portal.title">${payload.member_portal_title || "Member Portal"}</strong><p data-garrison-text="sections.member_portal.subtitle">${payload.member_portal_subtitle || "Members can manage bookings, plans, and account details."}</p><p><a class="g365-universal-btn" href="${payload.member_portal_url || payload.portal_url || (payload.base_url && payload.gym_slug ? payload.base_url + "/member/" + payload.gym_slug : "#")}">${payload.member_portal_cta || "Open portal"}</a></p></article>`,
     );
   }
-  if (featureEnabled(payload, "programs")) {
+  if (programsEnabled) {
     memberLinks.push(
-      `<a class="g365-universal-btn" data-garrison-component="programs" href="${payload.programs_url || payload.programs_widget_url || (payload.base_url && payload.gym_slug ? payload.base_url + "/widgets/programs/" + payload.gym_slug : "#programs")}">Programs</a>`,
+      `<article class="g365-universal-card" data-garrison-component="programs"><strong data-garrison-text="sections.programs.title">${payload.programs_title || "Programs"}</strong><p data-garrison-text="sections.programs.subtitle">${payload.programs_subtitle || "Showcase workshops, challenges, and signature training tracks."}</p><p><a class="g365-universal-btn" href="${payload.programs_url || payload.programs_widget_url || (payload.base_url && payload.gym_slug ? payload.base_url + "/widgets/programs/" + payload.gym_slug : "#programs")}">${payload.programs_cta || "Explore programs"}</a></p></article>`,
     );
   }
   upsertUniversal(
     "g365-universal-member-links",
     memberLinks.length > 0,
-    `<section class="g365-universal-section"><div class="g365-universal-inner"><div style="display:flex;gap:12px;flex-wrap:wrap">${memberLinks.join("")}</div></div></section>`,
+    `<section class="g365-universal-section"><div class="g365-universal-inner"><p class="g365-universal-kicker">Account</p><h2 class="g365-universal-title">Member tools</h2><div class="g365-universal-grid">${memberLinks.join("")}</div></div></section>`,
   );
+  markRenderedFeature("member_portal", memberPortalEnabled);
+  markRenderedFeature("programs", programsEnabled);
 
   upsertUniversal(
     "g365-universal-announcement",
     featureEnabled(payload, "announcement_bar"),
     `<div class="g365-promo-bar" data-garrison-component="announcement_bar" style="top:0;bottom:auto;--g365-promo-bg:${payload.announcement_bg_color || payload.primary_color || "#7c3aed"};--g365-promo-text:${payload.announcement_text_color || "#fff"}"><span>${payload.announcement_text || "Studio announcement"}</span>${payload.announcement_url ? `<a href="${payload.announcement_url}">Learn more</a>` : ""}</div>`,
+  );
+  markRenderedFeature(
+    "announcement_bar",
+    featureEnabled(payload, "announcement_bar"),
   );
   // g365-final-component-bind: bind universal sections created during this pass.
   document.querySelectorAll("[data-garrison-component]").forEach((node) => {
