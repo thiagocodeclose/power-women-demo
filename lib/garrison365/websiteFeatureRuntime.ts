@@ -29,6 +29,7 @@ const WEBSITE_FEATURE_ALIASES: Record<string, string> = {
   instructors: "instructors",
   teachers: "instructors",
   media_carousel: "media_carousel",
+  hero: "media_carousel",
   member_portal: "member_portal",
   programs: "programs",
 };
@@ -495,6 +496,78 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
     `<div class="g365-ai-agent" data-garrison-component="ai_agent">${payload.ai_agent_widget_url ? `<iframe src="${payload.ai_agent_widget_url}" title="AI sales agent"></iframe>` : `<div class="g365-ai-bubble"><div class="g365-ai-dot">AI</div><div><strong>${payload.ai_agent_name || "AI Sales Agent"}</strong><p>${payload.ai_agent_greeting || "Need help choosing a class or offer?"}</p></div></div>`}</div>`,
   );
 
+  upsertUniversal(
+    "g365-universal-lead-capture",
+    featureEnabled(payload, "lead_capture"),
+    renderSectionShell(
+      "lead_capture",
+      "Start here",
+      payload.lead_capture_title || "Claim your intro offer",
+      sectionStyle(payload, "lead_capture"),
+      '<div class="g365-universal-card"><p>' +
+        (payload.lead_capture_subtitle ||
+          "Share your email and the studio will help you choose the right first class.") +
+        '</p><form data-garrison-widget="lead_capture" style="display:flex;gap:10px;flex-wrap:wrap"><input aria-label="Email" placeholder="Email address" style="flex:1;min-width:220px;border:1px solid currentColor;border-radius:999px;padding:14px 16px;background:transparent;color:inherit" /><a class="g365-universal-btn" href="' +
+        (payload.lead_capture_url ||
+          payload.promo_url ||
+          payload.book_class_url ||
+          "#") +
+        '">' +
+        (payload.lead_capture_cta || payload.intro_offer_cta || "Send") +
+        "</a></form></div>",
+    ),
+  );
+
+  const mediaItems = limitItems(
+    siteContent.media ||
+      siteContent.media_carousel ||
+      siteContent.gallery ||
+      [payload.hero_video_url, payload.hero_image_url, payload.logo_url].filter(
+        Boolean,
+      ),
+    sectionStyle(payload, "media_carousel"),
+    6,
+  );
+  upsertUniversal(
+    "g365-universal-media-carousel",
+    featureEnabled(payload, "media_carousel") && mediaItems.length > 0,
+    renderSectionShell(
+      "media_carousel",
+      "Inside the studio",
+      payload.media_carousel_headline || "See the experience",
+      sectionStyle(payload, "media_carousel"),
+      '<div class="g365-universal-grid">' +
+        mediaItems
+          .map((item: any) => {
+            const url =
+              typeof item === "string"
+                ? item
+                : item.url || item.src || item.image_url || item.video_url;
+            const label =
+              typeof item === "string"
+                ? "Studio media"
+                : item.alt || item.title || "Studio media";
+            if (!url) return "";
+            if (/\.(mp4|webm|mov)(\?|$)/i.test(url)) {
+              return (
+                '<video data-garrison-component="media_carousel" src="' +
+                url +
+                '" muted loop playsinline controls style="width:100%;border-radius:18px;object-fit:cover;aspect-ratio:4/3"></video>'
+              );
+            }
+            return (
+              '<img data-garrison-component="media_carousel" src="' +
+              url +
+              '" alt="' +
+              label +
+              '" style="width:100%;border-radius:18px;object-fit:cover;aspect-ratio:4/3" />'
+            );
+          })
+          .join("") +
+        "</div>",
+    ),
+  );
+
   const memberLinks = [];
   if (featureEnabled(payload, "member_portal")) {
     memberLinks.push(
@@ -517,4 +590,26 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
     featureEnabled(payload, "announcement_bar"),
     `<div class="g365-promo-bar" data-garrison-component="announcement_bar" style="top:0;bottom:auto;--g365-promo-bg:${payload.announcement_bg_color || payload.primary_color || "#7c3aed"};--g365-promo-text:${payload.announcement_text_color || "#fff"}"><span>${payload.announcement_text || "Studio announcement"}</span>${payload.announcement_url ? `<a href="${payload.announcement_url}">Learn more</a>` : ""}</div>`,
   );
+  // g365-final-component-bind: bind universal sections created during this pass.
+  document.querySelectorAll("[data-garrison-component]").forEach((node) => {
+    const el = node as HTMLElement;
+    const feature = canonicalFeatureName(
+      el.getAttribute("data-garrison-component"),
+    );
+    if (TOGGLEABLE_COMPONENTS.has(feature)) {
+      el.style.display = featureEnabled(payload, feature) ? "" : "none";
+    }
+    if (feature && el.dataset.garrisonClickBound !== "true") {
+      el.dataset.garrisonClickBound = "true";
+      el.addEventListener("click", () => {
+        window.parent?.postMessage(
+          {
+            type: "GARRISON365_COMPONENT_CLICK",
+            payload: { component: feature },
+          },
+          "*",
+        );
+      });
+    }
+  });
 }
