@@ -151,12 +151,12 @@ function ensureUniversalStyle() {
   const style = document.createElement("style");
   style.id = "g365-universal-style";
   style.textContent = `
-    .g365-universal-section { padding: 72px 24px; background: var(--cg-bg, #0b0b0b); color: var(--cg-text, inherit); }
+    .g365-universal-section { padding: 72px 24px; background: color-mix(in srgb, var(--cg-bg, #0b0b0b) 94%, var(--cg-primary, #7c3aed) 6%); color: var(--cg-text, inherit); font-family: var(--cg-body-font, inherit); }
     .g365-universal-inner { max-width: 1120px; margin: 0 auto; }
     .g365-universal-kicker { color: var(--cg-primary, #7c3aed); text-transform: uppercase; letter-spacing: .18em; font-size: 12px; font-weight: 800; margin-bottom: 12px; }
-    .g365-universal-title { font-size: clamp(32px, 5vw, 58px); line-height: 1; margin: 0 0 18px; }
+    .g365-universal-title { font-family: var(--cg-heading-font, inherit); font-size: clamp(32px, 5vw, 58px); line-height: 1; margin: 0 0 18px; }
     .g365-universal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
-    .g365-universal-card { border: 1px solid color-mix(in srgb, currentColor 16%, transparent); border-radius: 18px; padding: 22px; background: color-mix(in srgb, var(--cg-bg, #0b0b0b) 86%, currentColor 8%); }
+    .g365-universal-card { border: 1px solid color-mix(in srgb, currentColor 16%, transparent); border-radius: var(--cg-radius, 18px); padding: 22px; background: color-mix(in srgb, var(--cg-bg, #0b0b0b) 86%, currentColor 8%); }
     .g365-universal-card p { opacity: .72; line-height: 1.55; margin: 8px 0 0; }
     .g365-promo-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; display: flex; justify-content: center; align-items: center; gap: 18px; padding: 14px 20px; background: var(--g365-promo-bg, var(--cg-primary, #2d275f)); color: var(--g365-promo-text, #fff); font-weight: 900; text-transform: uppercase; letter-spacing: .08em; }
     .g365-promo-bar a, .g365-universal-btn { color: inherit; border: 1px solid currentColor; border-radius: 999px; padding: 9px 16px; text-decoration: none; }
@@ -330,12 +330,12 @@ function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
   const memberLinks = [];
   if (featureEnabled(payload, "member_portal")) {
     memberLinks.push(
-      `<a class="g365-universal-btn" data-garrison-component="member_portal" href="${payload.portal_url || "#"}">Member Portal</a>`,
+      `<a class="g365-universal-btn" data-garrison-component="member_portal" href="${payload.member_portal_url || payload.portal_url || (payload.base_url && payload.gym_slug ? payload.base_url + "/member/" + payload.gym_slug : "#")}">Member Portal</a>`,
     );
   }
   if (featureEnabled(payload, "programs")) {
     memberLinks.push(
-      `<a class="g365-universal-btn" data-garrison-component="programs" href="#programs">Programs</a>`,
+      `<a class="g365-universal-btn" data-garrison-component="programs" href="${payload.programs_url || payload.programs_widget_url || (payload.base_url && payload.gym_slug ? payload.base_url + "/widgets/programs/" + payload.gym_slug : "#programs")}">Programs</a>`,
     );
   }
   upsertUniversal(
@@ -427,6 +427,9 @@ export function Garrison365LivePreview() {
           root.style.setProperty("--cg-primary", p.primary_color);
         if (p.bg_color) root.style.setProperty("--cg-bg", p.bg_color);
         if (p.text_color) root.style.setProperty("--cg-text", p.text_color);
+        if (p.heading_font)
+          root.style.setProperty("--cg-heading-font", p.heading_font);
+        if (p.body_font) root.style.setProperty("--cg-body-font", p.body_font);
         if (p.border_radius) {
           const r = p.border_radius;
           const px =
@@ -545,6 +548,8 @@ export function Garrison365LivePreview() {
               gym_hours: (p as any).gym_hours,
               // Portal URL
               portal_url: (p as any).portal_url,
+              member_portal_url: (p as any).member_portal_url,
+              programs_url: (p as any).programs_url,
               base_url: (p as any).base_url,
             },
           }),
