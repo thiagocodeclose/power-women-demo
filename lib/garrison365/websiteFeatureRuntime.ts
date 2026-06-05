@@ -237,9 +237,70 @@ function markRenderedFeature(feature: string, rendered: boolean) {
   if (!existing) document.body.appendChild(marker);
 }
 
+function resolveBinding(payload: WebsiteFeaturePayload, path: string) {
+  const direct: Record<string, any> = {
+    "gym.name": payload.gym_name,
+    "brand.tagline": payload.tagline,
+    "brand.hero_headline": payload.hero_headline,
+    "brand.hero_cta_text": payload.hero_cta_text,
+    "brand.book_class_url": payload.book_class_url,
+    "brand.buy_classes_url": payload.buy_classes_url,
+    "brand.buy_classes_cta": payload.buy_classes_cta || "Buy Classes",
+    "brand.promo_text": payload.promo_text,
+    "brand.promo_cta": payload.promo_cta,
+    "brand.intro_offer.badge": payload.intro_offer_badge,
+    "brand.intro_offer.title": payload.intro_offer_title,
+    "brand.intro_offer.subtitle": payload.intro_offer_subtitle,
+    "brand.intro_offer.cta": payload.intro_offer_cta,
+    "sections.classes_catalog.title": payload.classes_headline,
+    "sections.class_schedule.title": payload.schedule_headline,
+    "sections.pricing.title": payload.pricing_headline,
+    "sections.reviews.title": payload.reviews_headline,
+    "sections.testimonials.title": payload.reviews_headline,
+    "sections.faq.title": payload.faq_headline,
+    "sections.instructors.title": payload.instructors_headline,
+    "sections.press_logos.title": payload.press_headline,
+    "sections.location.title": payload.location_headline,
+    "sections.media_carousel.title": payload.media_carousel_headline,
+  };
+  if (
+    direct[path] !== undefined &&
+    direct[path] !== null &&
+    direct[path] !== ""
+  ) {
+    return direct[path];
+  }
+
+  const content = payload.site_content || {};
+  const value = path.split(".").reduce((acc: any, part) => {
+    if (acc === undefined || acc === null) return undefined;
+    return acc[part];
+  }, content);
+  return value;
+}
+
+function applyTextAndHrefBindings(payload: WebsiteFeaturePayload) {
+  document.querySelectorAll("[data-garrison-text]").forEach((node) => {
+    const el = node as HTMLElement;
+    const path = el.getAttribute("data-garrison-text") || "";
+    const value = resolveBinding(payload, path);
+    if (value === undefined || value === null || value === "") return;
+    el.textContent = String(value);
+  });
+
+  document.querySelectorAll("[data-garrison-href]").forEach((node) => {
+    const el = node as HTMLAnchorElement;
+    const path = el.getAttribute("data-garrison-href") || "";
+    const value = resolveBinding(payload, path);
+    if (value === undefined || value === null || value === "") return;
+    el.href = String(value);
+  });
+}
+
 export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
   ensureUniversalStyle();
   (window as any).GARRISON365_RUNTIME_VERSION = GARRISON365_RUNTIME_VERSION;
+  applyTextAndHrefBindings(payload);
 
   const markerHost =
     document.getElementById("g365-widget-markers") ||
