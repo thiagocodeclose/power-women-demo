@@ -57,6 +57,58 @@ const TOGGLEABLE_COMPONENTS = new Set([
   "announcement_bar",
 ]);
 
+function shouldAutoMarkSection(feature: string) {
+  return TOGGLEABLE_COMPONENTS.has(canonicalFeatureName(feature));
+}
+
+function ensureSectionMarkers(node: Element, feature: string) {
+  const el = node as HTMLElement;
+  if (!el || !shouldAutoMarkSection(feature)) return;
+  el.setAttribute("data-garrison-section-ready", "true");
+
+  if (
+    !el.querySelector('[data-garrison-section-field="title"]') &&
+    !el.querySelector("[data-garrison-section-title]")
+  ) {
+    const titleNode = el.querySelector(
+      'h1, h2, h3, [data-garrison-text], [class*="title"], [class*="heading"], [class*="headline"]',
+    ) as HTMLElement | null;
+    if (titleNode) {
+      titleNode.setAttribute("data-garrison-section-title", "true");
+      titleNode.setAttribute("data-garrison-section-field", "title");
+    }
+  }
+
+  if (
+    !el.querySelector('[data-garrison-section-field="cta"]') &&
+    !el.querySelector("[data-garrison-section-cta]")
+  ) {
+    const ctaNode = el.querySelector(
+      'a, button, [role="button"], [class*="cta"], [class*="btn"]',
+    ) as HTMLElement | null;
+    if (ctaNode) {
+      ctaNode.setAttribute("data-garrison-section-cta", "true");
+      ctaNode.setAttribute("data-garrison-section-field", "cta");
+      if (ctaNode.tagName === "A") {
+        ctaNode.setAttribute("data-garrison-section-cta-href", "true");
+      }
+    }
+  }
+
+  if (!el.querySelector("[data-garrison-section-item]")) {
+    el.querySelectorAll(
+      'article, li, [class*="card"], [class*="item"], [class*="tile"], [class*="plan"], [class*="class"]',
+    ).forEach((item, index) => {
+      if (index < 24 && item !== el) {
+        (item as HTMLElement).setAttribute(
+          "data-garrison-section-item",
+          "true",
+        );
+      }
+    });
+  }
+}
+
 function canonicalFeatureName(value?: string | null) {
   if (!value) return "";
   return WEBSITE_FEATURE_ALIASES[value] || value;
@@ -322,6 +374,7 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
     const feature = canonicalFeatureName(
       el.getAttribute("data-garrison-component"),
     );
+    ensureSectionMarkers(el, feature);
     if (TOGGLEABLE_COMPONENTS.has(feature)) {
       el.style.display = featureEnabled(payload, feature) ? "" : "none";
     }
@@ -842,6 +895,7 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
     const feature = canonicalFeatureName(
       el.getAttribute("data-garrison-component"),
     );
+    ensureSectionMarkers(el, feature);
     if (TOGGLEABLE_COMPONENTS.has(feature)) {
       el.style.display = featureEnabled(payload, feature) ? "" : "none";
     }
