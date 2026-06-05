@@ -3,11 +3,13 @@
 
 type WebsiteFeaturePayload = Record<string, any>;
 
-const GARRISON365_RUNTIME_VERSION = "2026-06-05-section-styles";
+const GARRISON365_RUNTIME_VERSION = "2026-06-05-core-widget-coverage";
 
 const WEBSITE_FEATURE_ALIASES: Record<string, string> = {
   ai_agent: "ai_agent",
   chat: "ai_agent",
+  book_class: "book_class",
+  buy_classes: "buy_classes",
   schedule: "class_schedule",
   class_schedule: "class_schedule",
   classes: "classes_catalog",
@@ -18,6 +20,7 @@ const WEBSITE_FEATURE_ALIASES: Record<string, string> = {
   location_map: "location_map",
   promo_banners: "promo_banner",
   promo_banner: "promo_banner",
+  promo_carousel_bar: "promo_banner",
   announcement_bar: "announcement_bar",
   lead_capture: "lead_capture",
   lead_capture_form: "lead_capture",
@@ -36,6 +39,10 @@ const WEBSITE_FEATURE_ALIASES: Record<string, string> = {
 
 const TOGGLEABLE_COMPONENTS = new Set([
   "classes_catalog",
+  "class_schedule",
+  "ai_agent",
+  "book_class",
+  "buy_classes",
   "pricing",
   "media_carousel",
   "lead_capture",
@@ -61,6 +68,10 @@ function featureEnabled(payload: WebsiteFeaturePayload, feature: string) {
       return (
         payload.show_ai_agent !== false && payload.widgets_ai_chat !== false
       );
+    case "book_class":
+      return payload.show_book_class !== false;
+    case "buy_classes":
+      return payload.show_buy_classes !== false;
     case "pricing":
       return (
         payload.show_buy_classes !== false && payload.show_pricing !== false
@@ -495,6 +506,125 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
     featureEnabled(payload, "ai_agent"),
     `<div class="g365-ai-agent" data-garrison-component="ai_agent">${payload.ai_agent_widget_url ? `<iframe src="${payload.ai_agent_widget_url}" title="AI sales agent"></iframe>` : `<div class="g365-ai-bubble"><div class="g365-ai-dot">AI</div><div><strong>${payload.ai_agent_name || "AI Sales Agent"}</strong><p>${payload.ai_agent_greeting || "Need help choosing a class or offer?"}</p></div></div>`}</div>`,
   );
+
+  const classItems = limitItems(
+    siteContent.classes || siteContent.class_catalog || [],
+    sectionStyle(payload, "classes_catalog"),
+    6,
+  );
+  const classesRendered =
+    featureEnabled(payload, "classes_catalog") &&
+    classItems.length > 0 &&
+    !document.querySelector(
+      '[data-garrison-component="classes_catalog"], [data-garrison-component="classes"]',
+    );
+  upsertUniversal(
+    "g365-universal-classes-catalog",
+    classesRendered,
+    renderSectionShell(
+      "classes_catalog",
+      "Classes",
+      payload.classes_headline || "Explore classes",
+      sectionStyle(payload, "classes_catalog"),
+      '<div class="g365-universal-grid">' +
+        classItems
+          .map(
+            (item: any) =>
+              '<article class="g365-universal-card"><strong>' +
+              (item.website_name || item.name || "Class") +
+              "</strong><p>" +
+              (item.website_description ||
+                item.description ||
+                item.difficulty_level ||
+                "Configured class offering.") +
+              "</p></article>",
+          )
+          .join("") +
+        "</div>",
+    ),
+  );
+  markRenderedFeature("classes_catalog", classesRendered);
+
+  const scheduleItems = limitItems(
+    siteContent.schedule || siteContent.classes || [],
+    sectionStyle(payload, "class_schedule"),
+    4,
+  );
+  const scheduleRendered =
+    featureEnabled(payload, "class_schedule") &&
+    scheduleItems.length > 0 &&
+    !document.querySelector(
+      '[data-garrison-component="class_schedule"], [data-garrison-component="schedule"]',
+    );
+  upsertUniversal(
+    "g365-universal-class-schedule",
+    scheduleRendered,
+    renderSectionShell(
+      "class_schedule",
+      "Schedule",
+      payload.schedule_headline || "Book your next class",
+      sectionStyle(payload, "class_schedule"),
+      '<div class="g365-universal-grid">' +
+        scheduleItems
+          .map(
+            (item: any) =>
+              '<article class="g365-universal-card"><strong>' +
+              (item.website_name || item.name || "Class") +
+              "</strong><p>" +
+              (item.duration_minutes
+                ? item.duration_minutes + " min"
+                : "Schedule-ready") +
+              (item.difficulty_level ? " · " + item.difficulty_level : "") +
+              '</p><p><a class="g365-universal-btn" href="' +
+              (payload.book_class_url || "#") +
+              '">Book class</a></p></article>',
+          )
+          .join("") +
+        "</div>",
+    ),
+  );
+  markRenderedFeature("class_schedule", scheduleRendered);
+
+  const pricingItems = limitItems(
+    siteContent.plans || siteContent.pricing || [],
+    sectionStyle(payload, "pricing"),
+    4,
+  );
+  const pricingRendered =
+    featureEnabled(payload, "pricing") &&
+    pricingItems.length > 0 &&
+    !document.querySelector('[data-garrison-component="pricing"]');
+  upsertUniversal(
+    "g365-universal-pricing",
+    pricingRendered,
+    renderSectionShell(
+      "pricing",
+      "Pricing",
+      payload.pricing_headline || "Choose your plan",
+      sectionStyle(payload, "pricing"),
+      '<div class="g365-universal-grid">' +
+        pricingItems
+          .map((item: any) => {
+            const price =
+              item.price || item.amount || item.formatted_price || "";
+            return (
+              '<article class="g365-universal-card"><strong>' +
+              (item.website_name || item.name || "Plan") +
+              "</strong><p>" +
+              (price ? "$" + price + " " : "") +
+              (item.billing_cycle || item.interval || "") +
+              "</p><p>" +
+              (item.website_description ||
+                item.description ||
+                "Configured membership option.") +
+              "</p></article>"
+            );
+          })
+          .join("") +
+        "</div>",
+    ),
+  );
+  markRenderedFeature("pricing", pricingRendered);
 
   upsertUniversal(
     "g365-universal-lead-capture",
