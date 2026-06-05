@@ -48,6 +48,8 @@ type HandlePos = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w";
 
 type WebsiteFeaturePayload = Record<string, any>;
 
+const GARRISON365_RUNTIME_VERSION = "2026-06-05-section-styles";
+
 const WEBSITE_FEATURE_ALIASES: Record<string, string> = {
   ai_agent: "ai_agent",
   chat: "ai_agent",
@@ -188,6 +190,80 @@ function upsertUniversal(id: string, enabled: boolean, html: string) {
   return wrapper;
 }
 
+function sectionStyle(payload: WebsiteFeaturePayload, key: string) {
+  return (payload.section_styles && payload.section_styles[key]) || {};
+}
+
+function cssColor(value: string) {
+  if (!value) return value;
+  return value.startsWith("#") ? value : "#" + value;
+}
+
+function sectionInlineStyle(style: any) {
+  const rules = [];
+  if (style.bg_color) rules.push("background:" + cssColor(style.bg_color));
+  if (style.text_color) rules.push("color:" + cssColor(style.text_color));
+  return rules.length ? ' style="' + rules.join(";") + '"' : "";
+}
+
+function sectionLayoutClass(style: any) {
+  return (
+    "g365-layout-" + String(style.layout || "grid").replace(/[^a-z0-9_-]/gi, "")
+  );
+}
+
+function limitItems(items: any[], style: any, fallback: number) {
+  const max = Number(style.max_items || fallback);
+  return items.slice(0, Number.isFinite(max) && max > 0 ? max : fallback);
+}
+
+function renderSectionShell(
+  key: string,
+  kicker: string,
+  title: string,
+  style: any,
+  body: string,
+) {
+  const cta = style.cta_label
+    ? '<p><a class="g365-universal-btn" href="' +
+      (style.cta_url || "#") +
+      '">' +
+      style.cta_label +
+      "</a></p>"
+    : "";
+  return (
+    '<section class="g365-universal-section ' +
+    sectionLayoutClass(style) +
+    '" data-garrison-component="' +
+    key +
+    '" data-garrison-rendered="true"' +
+    sectionInlineStyle(style) +
+    '><div class="g365-universal-inner"><p class="g365-universal-kicker">' +
+    kicker +
+    '</p><h2 class="g365-universal-title">' +
+    (style.title || title) +
+    "</h2>" +
+    body +
+    cta +
+    "</div></section>"
+  );
+}
+
+function markRenderedFeature(feature: string, rendered: boolean) {
+  const id = "g365-rendered-" + feature;
+  const existing = document.getElementById(id);
+  if (!rendered) {
+    existing?.remove();
+    return;
+  }
+  const marker = existing || document.createElement("div");
+  marker.id = id;
+  marker.hidden = true;
+  marker.setAttribute("aria-hidden", "true");
+  marker.setAttribute("data-garrison-rendered-component", feature);
+  if (!existing) document.body.appendChild(marker);
+}
+
 function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
   ensureUniversalStyle();
 
@@ -197,6 +273,10 @@ function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
   markerHost.id = "g365-widget-markers";
   markerHost.hidden = true;
   markerHost.setAttribute("aria-hidden", "true");
+  markerHost.setAttribute(
+    "data-garrison-runtime-version",
+    GARRISON365_RUNTIME_VERSION,
+  );
   markerHost.innerHTML = Object.keys(WEBSITE_FEATURE_ALIASES)
     .map((name) => `<div data-garrison-widget="${name}"></div>`)
     .join("");
@@ -210,10 +290,24 @@ function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
     if (TOGGLEABLE_COMPONENTS.has(feature)) {
       el.style.display = featureEnabled(payload, feature) ? "" : "none";
     }
+    if (feature && el.dataset.garrisonClickBound !== "true") {
+      el.dataset.garrisonClickBound = "true";
+      el.addEventListener("click", () => {
+        window.parent?.postMessage(
+          {
+            type: "GARRISON365_COMPONENT_CLICK",
+            payload: { component: feature },
+          },
+          "*",
+        );
+      });
+    }
   });
 
   const siteContent = payload.site_content || {};
-  const faqItems = (
+
+  const faqStyle = sectionStyle(payload, "faq");
+  const faqItems = limitItems(
     siteContent.faq || [
       {
         question: "How do I book my first class?",
@@ -230,80 +324,199 @@ function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
         answer:
           payload.gym_address || "Add the studio address in Website settings.",
       },
-    ]
-  ).slice(0, 4);
+    ],
+    faqStyle,
+    4,
+  );
+  const faqRendered =
+    featureEnabled(payload, "faq") &&
+    !document.querySelector('[data-garrison-component="faq"]');
   upsertUniversal(
     "g365-universal-faq",
-    featureEnabled(payload, "faq") &&
-      !document.querySelector('[data-garrison-component="faq"]'),
-    `<section class="g365-universal-section" data-garrison-component="faq"><div class="g365-universal-inner"><p class="g365-universal-kicker">FAQ</p><h2 class="g365-universal-title" data-garrison-text="brand.faq_headline">${payload.faq_headline || "Questions, answered"}</h2><div class="g365-universal-grid">${faqItems
-      .map(
-        (item: any) =>
-          `<article class="g365-universal-card"><strong>${item.question || item}</strong><p>${item.answer || "Add the answer in Website content."}</p></article>`,
-      )
-      .join("")}</div></div></section>`,
+    faqRendered,
+    renderSectionShell(
+      "faq",
+      "FAQ",
+      payload.faq_headline || "Questions, answered",
+      faqStyle,
+      '<div class="g365-universal-grid">' +
+        faqItems
+          .map(
+            (item: any) =>
+              '<article class="g365-universal-card"><strong>' +
+              (item.question || item) +
+              "</strong><p>" +
+              (item.answer || "Add the answer in Website content.") +
+              "</p></article>",
+          )
+          .join("") +
+        "</div>",
+    ),
   );
+  markRenderedFeature("faq", faqRendered);
 
-  const reviews = (
+  const reviewStyle = sectionStyle(payload, "reviews");
+  const reviews = limitItems(
     siteContent.reviews ||
-    siteContent.testimonials || [
-      {
-        quote: "A polished, high-converting studio experience.",
-        author: "Member review",
-      },
-      {
-        quote: "Clear classes, easy booking, and a premium first impression.",
-        author: "Studio client",
-      },
-    ]
-  ).slice(0, 3);
+      siteContent.testimonials || [
+        {
+          quote: "A polished, high-converting studio experience.",
+          author: "Member review",
+        },
+        {
+          quote: "Clear classes, easy booking, and a premium first impression.",
+          author: "Studio client",
+        },
+      ],
+    reviewStyle,
+    3,
+  );
+  const reviewsRendered =
+    featureEnabled(payload, "reviews") &&
+    !document.querySelector(
+      '[data-garrison-component="reviews"], [data-garrison-component="testimonials"]',
+    );
   upsertUniversal(
     "g365-universal-reviews",
-    featureEnabled(payload, "reviews") &&
-      !document.querySelector(
-        '[data-garrison-component="reviews"], [data-garrison-component="testimonials"]',
-      ),
-    `<section class="g365-universal-section" data-garrison-component="reviews"><div class="g365-universal-inner"><p class="g365-universal-kicker">Reviews</p><h2 class="g365-universal-title">Loved by members</h2><div class="g365-universal-grid">${reviews
-      .map(
-        (item: any) =>
-          `<article class="g365-universal-card"><strong>${item.author || item.name || "Member"}</strong><p>${item.quote || item.text || item.review || item}</p></article>`,
-      )
-      .join("")}</div></div></section>`,
+    reviewsRendered,
+    renderSectionShell(
+      "reviews",
+      "Reviews",
+      "Loved by members",
+      reviewStyle,
+      '<div class="g365-universal-grid">' +
+        reviews
+          .map(
+            (item: any) =>
+              '<article class="g365-universal-card"><strong>' +
+              (item.author || item.name || "Member") +
+              "</strong><p>" +
+              (item.quote || item.text || item.review || item) +
+              "</p></article>",
+          )
+          .join("") +
+        "</div>",
+    ),
   );
+  markRenderedFeature("reviews", reviewsRendered);
 
+  const pressStyle = sectionStyle(payload, "press");
+  const pressItems = limitItems(
+    siteContent.press ||
+      siteContent.press_logos || ["Vogue", "Goop", "Shape", "Well+Good"],
+    pressStyle,
+    6,
+  );
+  const pressRendered =
+    featureEnabled(payload, "press_logos") &&
+    !document.querySelector(
+      '[data-garrison-component="press_logos"], [data-garrison-component="press"]',
+    );
   upsertUniversal(
     "g365-universal-press",
-    featureEnabled(payload, "press_logos") &&
-      !document.querySelector(
-        '[data-garrison-component="press_logos"], [data-garrison-component="press"]',
-      ),
-    `<section class="g365-universal-section" data-garrison-component="press_logos"><div class="g365-universal-inner"><p class="g365-universal-kicker">As seen in</p><div class="g365-universal-grid">${["Vogue", "Goop", "Shape", "Well+Good"].map((logo) => `<div class="g365-universal-card"><strong>${logo}</strong></div>`).join("")}</div></div></section>`,
+    pressRendered,
+    renderSectionShell(
+      "press_logos",
+      "As seen in",
+      "Trusted by the community",
+      pressStyle,
+      '<div class="g365-universal-grid">' +
+        pressItems
+          .map((item: any) => {
+            const label = item.publication || item.name || item.logo || item;
+            const quote = item.quote ? "<p>" + item.quote + "</p>" : "";
+            return (
+              '<article class="g365-universal-card"><strong>' +
+              label +
+              "</strong>" +
+              quote +
+              "</article>"
+            );
+          })
+          .join("") +
+        "</div>",
+    ),
   );
+  markRenderedFeature("press_logos", pressRendered);
 
-  const instructors = (siteContent.instructors || []).slice(0, 4);
+  const instructorStyle = sectionStyle(payload, "instructors");
+  const instructors = limitItems(
+    siteContent.instructors || siteContent.featured_teachers || [],
+    instructorStyle,
+    4,
+  );
+  const instructorsRendered =
+    featureEnabled(payload, "instructors") &&
+    instructors.length > 0 &&
+    !document.querySelector(
+      '[data-garrison-component="instructors"], [data-garrison-component="teachers"]',
+    );
   upsertUniversal(
     "g365-universal-instructors",
-    featureEnabled(payload, "instructors") &&
-      instructors.length > 0 &&
-      !document.querySelector(
-        '[data-garrison-component="instructors"], [data-garrison-component="teachers"]',
-      ),
-    `<section class="g365-universal-section" data-garrison-component="instructors"><div class="g365-universal-inner"><p class="g365-universal-kicker">Instructors</p><h2 class="g365-universal-title">Meet the team</h2><div class="g365-universal-grid">${instructors
-      .map(
-        (item: any) =>
-          `<article class="g365-universal-card"><strong>${item.website_name || item.name || item.full_name || "Instructor"}</strong><p>${item.website_bio || item.bio || item.website_title || item.title || "Certified studio instructor."}</p></article>`,
-      )
-      .join("")}</div></div></section>`,
+    instructorsRendered,
+    renderSectionShell(
+      "instructors",
+      "Instructors",
+      "Meet the team",
+      instructorStyle,
+      '<div class="g365-universal-grid">' +
+        instructors
+          .map(
+            (item: any) =>
+              '<article class="g365-universal-card"><strong>' +
+              (item.website_name ||
+                item.name ||
+                item.full_name ||
+                "Instructor") +
+              "</strong><p>" +
+              (item.website_bio ||
+                item.bio ||
+                item.website_title ||
+                item.role ||
+                item.title ||
+                "Certified studio instructor.") +
+              "</p></article>",
+          )
+          .join("") +
+        "</div>",
+    ),
   );
+  markRenderedFeature("instructors", instructorsRendered);
 
+  const locationStyle = sectionStyle(payload, "location");
+  const locationContent = siteContent.location || {};
+  const locationRendered =
+    featureEnabled(payload, "location_map") &&
+    !document.querySelector(
+      '[data-garrison-component="location_map"], [data-garrison-component="info"]',
+    );
   upsertUniversal(
     "g365-universal-location",
-    featureEnabled(payload, "location_map") &&
-      !document.querySelector(
-        '[data-garrison-component="location_map"], [data-garrison-component="info"]',
-      ),
-    `<section class="g365-universal-section" data-garrison-component="location_map"><div class="g365-universal-inner"><p class="g365-universal-kicker">Location</p><h2 class="g365-universal-title">${payload.location_headline || "Find us near you"}</h2><div class="g365-universal-card"><strong>${payload.gym_name || "Studio"}</strong><p>${payload.gym_address || [payload.local_neighborhood, payload.local_city].filter(Boolean).join(", ") || "Add address in Website settings."}</p>${payload.google_maps_url ? `<p><a class="g365-universal-btn" href="${payload.google_maps_url}">Open map</a></p>` : ""}</div></div></section>`,
+    locationRendered,
+    renderSectionShell(
+      "location_map",
+      "Location",
+      payload.location_headline || locationContent.title || "Find us near you",
+      locationStyle,
+      '<div class="g365-universal-card"><strong>' +
+        (locationContent.name || payload.gym_name || "Studio") +
+        "</strong><p>" +
+        (locationContent.address ||
+          payload.gym_address ||
+          [payload.local_neighborhood, payload.local_city]
+            .filter(Boolean)
+            .join(", ") ||
+          "Add address in Website settings.") +
+        "</p>" +
+        (payload.google_maps_url
+          ? '<p><a class="g365-universal-btn" href="' +
+            payload.google_maps_url +
+            '">Open map</a></p>'
+          : "") +
+        "</div>",
+    ),
   );
+  markRenderedFeature("location_map", locationRendered);
 
   upsertUniversal(
     "g365-universal-promo",
