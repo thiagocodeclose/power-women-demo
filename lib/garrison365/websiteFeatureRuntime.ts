@@ -192,7 +192,9 @@ function renderSectionShell(
   body: string,
 ) {
   const cta = style.cta_label
-    ? '<p><a class="g365-universal-btn" href="' +
+    ? '<p><a class="g365-universal-btn" data-garrison-text="sections.' +
+      key +
+      '.cta" href="' +
       (style.cta_url || "#") +
       '">' +
       style.cta_label +
@@ -205,9 +207,13 @@ function renderSectionShell(
     key +
     '" data-garrison-rendered="true"' +
     sectionInlineStyle(style) +
-    '><div class="g365-universal-inner"><p class="g365-universal-kicker">' +
+    '><div class="g365-universal-inner"><p class="g365-universal-kicker" data-garrison-text="sections.' +
+    key +
+    '.kicker">' +
     kicker +
-    '</p><h2 class="g365-universal-title">' +
+    '</p><h2 class="g365-universal-title" data-garrison-text="sections.' +
+    key +
+    '.title">' +
     (style.title || title) +
     "</h2>" +
     body +
@@ -309,10 +315,14 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
       '<div class="g365-universal-grid">' +
         faqItems
           .map(
-            (item: any) =>
-              '<article class="g365-universal-card"><strong>' +
+            (item: any, index: number) =>
+              '<article class="g365-universal-card"><strong data-garrison-text="sections.faq.items.' +
+              index +
+              '.question">' +
               (item.question || item) +
-              "</strong><p>" +
+              '</strong><p data-garrison-text="sections.faq.items.' +
+              index +
+              '.answer">' +
               (item.answer || "Add the answer in Website content.") +
               "</p></article>",
           )
@@ -354,10 +364,14 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
       '<div class="g365-universal-grid">' +
         reviews
           .map(
-            (item: any) =>
-              '<article class="g365-universal-card"><strong>' +
+            (item: any, index: number) =>
+              '<article class="g365-universal-card"><strong data-garrison-text="sections.reviews.items.' +
+              index +
+              '.author">' +
               (item.author || item.name || "Member") +
-              "</strong><p>" +
+              '</strong><p data-garrison-text="sections.reviews.items.' +
+              index +
+              '.quote">' +
               (item.quote || item.text || item.review || item) +
               "</p></article>",
           )
@@ -389,11 +403,19 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
       pressStyle,
       '<div class="g365-universal-grid">' +
         pressItems
-          .map((item: any) => {
+          .map((item: any, index: number) => {
             const label = item.publication || item.name || item.logo || item;
-            const quote = item.quote ? "<p>" + item.quote + "</p>" : "";
+            const quote = item.quote
+              ? '<p data-garrison-text="sections.press_logos.items.' +
+                index +
+                '.quote">' +
+                item.quote +
+                "</p>"
+              : "";
             return (
-              '<article class="g365-universal-card"><strong>' +
+              '<article class="g365-universal-card"><strong data-garrison-text="sections.press_logos.items.' +
+              index +
+              '.label">' +
               label +
               "</strong>" +
               quote +
@@ -429,13 +451,17 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
       '<div class="g365-universal-grid">' +
         instructors
           .map(
-            (item: any) =>
-              '<article class="g365-universal-card"><strong>' +
+            (item: any, index: number) =>
+              '<article class="g365-universal-card"><strong data-garrison-text="sections.instructors.items.' +
+              index +
+              '.name">' +
               (item.website_name ||
                 item.name ||
                 item.full_name ||
                 "Instructor") +
-              "</strong><p>" +
+              '</strong><p data-garrison-text="sections.instructors.items.' +
+              index +
+              '.bio">' +
               (item.website_bio ||
                 item.bio ||
                 item.website_title ||
@@ -465,9 +491,9 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
       "Location",
       payload.location_headline || locationContent.title || "Find us near you",
       locationStyle,
-      '<div class="g365-universal-card"><strong>' +
+      '<div class="g365-universal-card"><strong data-garrison-text="sections.location.name">' +
         (locationContent.name || payload.gym_name || "Studio") +
-        "</strong><p>" +
+        '</strong><p data-garrison-text="sections.location.address">' +
         (locationContent.address ||
           payload.gym_address ||
           [payload.local_neighborhood, payload.local_city]
@@ -476,7 +502,7 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
           "Add address in Website settings.") +
         "</p>" +
         (payload.google_maps_url
-          ? '<p><a class="g365-universal-btn" href="' +
+          ? '<p><a class="g365-universal-btn" data-garrison-text="sections.location.cta" href="' +
             payload.google_maps_url +
             '">Open map</a></p>'
           : "") +
@@ -529,10 +555,14 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
       '<div class="g365-universal-grid">' +
         classItems
           .map(
-            (item: any) =>
-              '<article class="g365-universal-card"><strong>' +
+            (item: any, index: number) =>
+              '<article class="g365-universal-card"><strong data-garrison-text="sections.classes_catalog.items.' +
+              index +
+              '.name">' +
               (item.website_name || item.name || "Class") +
-              "</strong><p>" +
+              '</strong><p data-garrison-text="sections.classes_catalog.items.' +
+              index +
+              '.description">' +
               (item.website_description ||
                 item.description ||
                 item.difficulty_level ||
@@ -567,15 +597,19 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
       '<div class="g365-universal-grid">' +
         scheduleItems
           .map(
-            (item: any) =>
-              '<article class="g365-universal-card"><strong>' +
+            (item: any, index: number) =>
+              '<article class="g365-universal-card"><strong data-garrison-text="sections.class_schedule.items.' +
+              index +
+              '.name">' +
               (item.website_name || item.name || "Class") +
-              "</strong><p>" +
+              '</strong><p data-garrison-text="sections.class_schedule.items.' +
+              index +
+              '.meta">' +
               (item.duration_minutes
                 ? item.duration_minutes + " min"
                 : "Schedule-ready") +
               (item.difficulty_level ? " · " + item.difficulty_level : "") +
-              '</p><p><a class="g365-universal-btn" href="' +
+              '</p><p><a class="g365-universal-btn" data-garrison-text="sections.class_schedule.cta" href="' +
               (payload.book_class_url || "#") +
               '">Book class</a></p></article>',
           )
@@ -608,12 +642,12 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
             const price =
               item.price || item.amount || item.formatted_price || "";
             return (
-              '<article class="g365-universal-card"><strong>' +
+              '<article class="g365-universal-card"><strong data-garrison-text="sections.pricing.items.name">' +
               (item.website_name || item.name || "Plan") +
-              "</strong><p>" +
+              '</strong><p data-garrison-text="sections.pricing.items.price">' +
               (price ? "$" + price + " " : "") +
               (item.billing_cycle || item.interval || "") +
-              "</p><p>" +
+              '</p><p data-garrison-text="sections.pricing.items.description">' +
               (item.website_description ||
                 item.description ||
                 "Configured membership option.") +
@@ -634,7 +668,7 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
       "Start here",
       payload.lead_capture_title || "Claim your intro offer",
       sectionStyle(payload, "lead_capture"),
-      '<div class="g365-universal-card"><p>' +
+      '<div class="g365-universal-card"><p data-garrison-text="sections.lead_capture.subtitle">' +
         (payload.lead_capture_subtitle ||
           "Share your email and the studio will help you choose the right first class.") +
         '</p><form data-garrison-widget="lead_capture" style="display:flex;gap:10px;flex-wrap:wrap"><input aria-label="Email" placeholder="Email address" style="flex:1;min-width:220px;border:1px solid currentColor;border-radius:999px;padding:14px 16px;background:transparent;color:inherit" /><a class="g365-universal-btn" href="' +
@@ -642,7 +676,7 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
           payload.promo_url ||
           payload.book_class_url ||
           "#") +
-        '">' +
+        '" data-garrison-text="sections.lead_capture.cta">' +
         (payload.lead_capture_cta || payload.intro_offer_cta || "Send") +
         "</a></form></div>",
     ),

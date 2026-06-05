@@ -406,22 +406,31 @@ export default function Home() {
         </div>
         <ul className="pw-nav-links">
           <li>
-            <a href="#approach">Approach</a>
+            <a href="#approach" data-garrison-text="nav.approach">
+              Approach
+            </a>
           </li>
           <li>
-            <a href="#programs">Programs</a>
+            <a href="#programs" data-garrison-text="nav.programs">
+              Programs
+            </a>
           </li>
           <li>
-            <a href="#pricing">Pricing</a>
+            <a href="#pricing" data-garrison-text="nav.pricing">
+              Pricing
+            </a>
           </li>
           <li>
-            <a href="#contact">Contact</a>
+            <a href="#contact" data-garrison-text="nav.contact">
+              Contact
+            </a>
           </li>
         </ul>
         <a
           href="#trial"
           className="pw-nav-cta"
           data-garrison-href="brand.book_class_url"
+          data-garrison-text="brand.hero_cta_text"
         >
           Free Trial
         </a>
@@ -497,8 +506,18 @@ export default function Home() {
               className="reveal"
               style={{ transitionDelay: `${i * 0.1}s` }}
             >
-              <span className="pw-strip-num pw-head">{s.value}</span>
-              <span className="pw-strip-label">{s.label}</span>
+              <span
+                className="pw-strip-num pw-head"
+                data-garrison-text={`stats.${i}.value`}
+              >
+                {s.value}
+              </span>
+              <span
+                className="pw-strip-label"
+                data-garrison-text={`stats.${i}.label`}
+              >
+                {s.label}
+              </span>
             </div>
           ))}
         </div>
@@ -507,13 +526,24 @@ export default function Home() {
       {/* ── PILLARS ── */}
       <section className="pw-section pw-pillars" id="approach">
         <div className="pw-section-inner">
-          <p className="pw-section-label reveal">Our Approach</p>
-          <h2 className="pw-section-title pw-head reveal">
+          <p
+            className="pw-section-label reveal"
+            data-garrison-text="sections.approach.kicker"
+          >
+            Our Approach
+          </p>
+          <h2
+            className="pw-section-title pw-head reveal"
+            data-garrison-text="sections.approach.title"
+          >
             Built on four pillars
             <br />
             that actually work.
           </h2>
-          <p className="pw-section-sub reveal">
+          <p
+            className="pw-section-sub reveal"
+            data-garrison-text="sections.approach.subtitle"
+          >
             Everything we do is designed to help women get stronger — in body,
             mind, and community.
           </p>
@@ -525,8 +555,18 @@ export default function Home() {
                 style={{ transitionDelay: `${i * 0.1}s` }}
               >
                 <div className="pw-pillar-icon">{pillarIcons[i]}</div>
-                <div className="pw-pillar-title">{p.title}</div>
-                <p className="pw-pillar-desc">{p.desc}</p>
+                <div
+                  className="pw-pillar-title"
+                  data-garrison-text={`sections.approach.items.${i}.title`}
+                >
+                  {p.title}
+                </div>
+                <p
+                  className="pw-pillar-desc"
+                  data-garrison-text={`sections.approach.items.${i}.description`}
+                >
+                  {p.desc}
+                </p>
               </div>
             ))}
           </div>
@@ -540,8 +580,16 @@ export default function Home() {
         data-garrison-component="classes_catalog"
       >
         <div className="pw-section-inner">
-          <p className="pw-section-label reveal">Programs</p>
-          <h2 className="pw-section-title pw-head reveal">
+          <p
+            className="pw-section-label reveal"
+            data-garrison-text="sections.classes_catalog.kicker"
+          >
+            Programs
+          </p>
+          <h2
+            className="pw-section-title pw-head reveal"
+            data-garrison-text="sections.classes_catalog.title"
+          >
             A program for every
             <br />
             woman, every goal.
@@ -553,12 +601,35 @@ export default function Home() {
                 key={i}
                 style={{ transitionDelay: `${i * 0.1}s` }}
               >
-                <span className="pw-program-tag">{p.tag}</span>
-                <div className="pw-program-name">{p.name}</div>
-                <p className="pw-program-desc">{p.desc}</p>
+                <span
+                  className="pw-program-tag"
+                  data-garrison-text={`sections.classes_catalog.items.${i}.tag`}
+                >
+                  {p.tag}
+                </span>
+                <div
+                  className="pw-program-name"
+                  data-garrison-text={`sections.classes_catalog.items.${i}.name`}
+                >
+                  {p.name}
+                </div>
+                <p
+                  className="pw-program-desc"
+                  data-garrison-text={`sections.classes_catalog.items.${i}.description`}
+                >
+                  {p.desc}
+                </p>
                 <div className="pw-program-meta">
-                  <span>{p.duration}</span>
-                  <span>{p.format}</span>
+                  <span
+                    data-garrison-text={`sections.classes_catalog.items.${i}.duration`}
+                  >
+                    {p.duration}
+                  </span>
+                  <span
+                    data-garrison-text={`sections.classes_catalog.items.${i}.format`}
+                  >
+                    {p.format}
+                  </span>
                 </div>
               </div>
             ))}
@@ -573,8 +644,16 @@ export default function Home() {
         data-garrison-component="pricing"
       >
         <div className="pw-section-inner">
-          <p className="pw-section-label reveal">Membership</p>
-          <h2 className="pw-section-title pw-head reveal">
+          <p
+            className="pw-section-label reveal"
+            data-garrison-text="sections.pricing.kicker"
+          >
+            Membership
+          </p>
+          <h2
+            className="pw-section-title pw-head reveal"
+            data-garrison-text="sections.pricing.title"
+          >
             Invest in your
             <br />
             strongest self.
@@ -587,23 +666,47 @@ export default function Home() {
                 style={{ transitionDelay: `${i * 0.1}s` }}
               >
                 {p.featured && (
-                  <div className="pw-price-badge">Most Popular</div>
+                  <div
+                    className="pw-price-badge"
+                    data-garrison-text={`sections.pricing.items.${i}.badge`}
+                  >
+                    Most Popular
+                  </div>
                 )}
-                <div className="pw-price-name">{p.name}</div>
-                <div className="pw-price-amount">
+                <div
+                  className="pw-price-name"
+                  data-garrison-text={`sections.pricing.items.${i}.name`}
+                >
+                  {p.name}
+                </div>
+                <div
+                  className="pw-price-amount"
+                  data-garrison-text={`sections.pricing.items.${i}.price`}
+                >
                   ${p.price}
                   <span>/mo</span>
                 </div>
-                <p className="pw-price-desc">{p.desc}</p>
+                <p
+                  className="pw-price-desc"
+                  data-garrison-text={`sections.pricing.items.${i}.description`}
+                >
+                  {p.desc}
+                </p>
                 <ul className="pw-price-features">
                   {p.features.map((f, j) => (
-                    <li key={j}>{f}</li>
+                    <li
+                      key={j}
+                      data-garrison-text={`sections.pricing.items.${i}.features.${j}`}
+                    >
+                      {f}
+                    </li>
                   ))}
                 </ul>
                 <a
                   href="#trial"
                   className="pw-price-cta"
                   data-garrison-href="brand.buy_classes_url"
+                  data-garrison-text="brand.buy_classes_cta"
                 >
                   Get Started
                 </a>
@@ -670,20 +773,29 @@ export default function Home() {
           </div>
           <ul className="pw-footer-links">
             <li>
-              <a href="#approach">Approach</a>
+              <a href="#approach" data-garrison-text="footer.approach">
+                Approach
+              </a>
             </li>
             <li>
-              <a href="#programs">Programs</a>
+              <a href="#programs" data-garrison-text="footer.programs">
+                Programs
+              </a>
             </li>
             <li>
-              <a href="#pricing">Pricing</a>
+              <a href="#pricing" data-garrison-text="footer.pricing">
+                Pricing
+              </a>
             </li>
           </ul>
-          <div style={{ fontSize: "13px", color: "rgba(248,240,255,0.45)" }}>
+          <div
+            style={{ fontSize: "13px", color: "rgba(248,240,255,0.45)" }}
+            data-garrison-text="footer.contact"
+          >
             {siteData.contact.address} · {siteData.contact.phone}
           </div>
         </div>
-        <p className="pw-footer-copy">
+        <p className="pw-footer-copy" data-garrison-text="footer.copyright">
           © 2026 POWER Women&apos;s Gym. All rights reserved.
         </p>
       </footer>
