@@ -571,7 +571,11 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
         "</div>",
     ),
   );
-  markRenderedFeature("faq", faqRendered);
+  markRenderedFeature(
+    "faq",
+    featureEnabled(payload, "faq") &&
+      hasVisibleComponent('[data-garrison-component="faq"]'),
+  );
 
   const reviewStyle = sectionStyle(payload, "reviews");
   const reviews = limitItems(
@@ -667,7 +671,13 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
         "</div>",
     ),
   );
-  markRenderedFeature("press_logos", pressRendered);
+  markRenderedFeature(
+    "press_logos",
+    featureEnabled(payload, "press_logos") &&
+      hasVisibleComponent(
+        '[data-garrison-component="press_logos"], [data-garrison-component="press"]',
+      ),
+  );
 
   const instructorStyle = sectionStyle(payload, "instructors");
   const instructors = limitItems(
@@ -865,7 +875,13 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
         "</div>",
     ),
   );
-  markRenderedFeature("class_schedule", scheduleRendered);
+  markRenderedFeature(
+    "class_schedule",
+    featureEnabled(payload, "class_schedule") &&
+      hasVisibleComponent(
+        '[data-garrison-component="class_schedule"], [data-garrison-component="schedule"]',
+      ),
+  );
 
   const pricingItems = limitItems(
     siteContent.plans || siteContent.pricing || [],
