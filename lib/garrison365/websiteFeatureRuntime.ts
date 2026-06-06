@@ -37,6 +37,17 @@ const WEBSITE_FEATURE_ALIASES: Record<string, string> = {
   programs: "programs",
 };
 
+const DEFAULT_INSTRUCTORS = [
+  {
+    name: "Lead Instructor",
+    bio: "Certified studio instructor focused on form, progress, and client confidence.",
+  },
+  {
+    name: "Studio Coach",
+    bio: "Guides every class with clear cues, thoughtful modifications, and steady energy.",
+  },
+];
+
 const TOGGLEABLE_COMPONENTS = new Set([
   "classes_catalog",
   "class_schedule",
@@ -727,14 +738,14 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
 
   const instructorStyle = sectionStyle(payload, "instructors");
   const instructors = limitItems(
-    siteContent.instructors || siteContent.featured_teachers || [],
+    siteContent.instructors || siteContent.featured_teachers || DEFAULT_INSTRUCTORS,
     instructorStyle,
     4,
   );
   const instructorsRendered =
     featureEnabled(payload, "instructors") &&
     instructors.length > 0 &&
-    !document.querySelector(
+    !hasVisibleComponent(
       '[data-garrison-component="instructors"], [data-garrison-component="teachers"]',
     );
   upsertUniversal(
