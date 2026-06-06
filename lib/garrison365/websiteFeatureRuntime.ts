@@ -109,6 +109,110 @@ function ensureSectionMarkers(node: Element, feature: string) {
   }
 }
 
+function ensureEditableMediaAndLinks(payload: WebsiteFeaturePayload) {
+  const contentPaths: Record<string, string> = {
+    classes_catalog: "classes",
+    class_schedule: "schedule",
+    reviews: "reviews",
+    press_logos: "press",
+    instructors: "instructors",
+    media_carousel: "media_carousel",
+  };
+
+  const logo = document.querySelector(
+    'header img, nav img, [class*="logo"] img',
+  ) as HTMLElement | null;
+  if (logo && !logo.hasAttribute("data-garrison-src")) {
+    logo.setAttribute("data-garrison-src", "brand.logo_url");
+  }
+
+  document.querySelectorAll("[data-garrison-component]").forEach((node) => {
+    const feature = canonicalFeatureName(
+      node.getAttribute("data-garrison-component"),
+    );
+    const media = node.querySelectorAll("img, video, source");
+    media.forEach((mediaNode, index) => {
+      const el = mediaNode as HTMLElement;
+      if (el.hasAttribute("data-garrison-src")) return;
+      if (feature === "book_class") {
+        el.setAttribute("data-garrison-src", "brand.hero_url");
+        return;
+      }
+      const contentPath = contentPaths[feature];
+      if (contentPath) {
+        el.setAttribute(
+          "data-garrison-src",
+          `${contentPath}.${index}.image_url`,
+        );
+      }
+    });
+
+    node.querySelectorAll("a").forEach((anchorNode) => {
+      const anchor = anchorNode as HTMLAnchorElement;
+      if (anchor.hasAttribute("data-garrison-href")) return;
+      const signal =
+        `${anchor.textContent || ""} ${anchor.className || ""} ${anchor.getAttribute("href") || ""}`.toLowerCase();
+      let path = "brand.book_class_url";
+      if (/price|pricing|buy|membership|plan/.test(signal)) {
+        path = "brand.buy_classes_url";
+      } else if (/member|portal|account|login/.test(signal)) {
+        path = "brand.member_portal_url";
+      } else if (/program|workshop|challenge/.test(signal)) {
+        path = "brand.programs_url";
+      } else if (/map|location|direction|find us/.test(signal)) {
+        path = "brand.google_maps_url";
+      }
+      anchor.setAttribute("data-garrison-href", path);
+    });
+  });
+
+  document
+    .querySelectorAll("main img, main video, main source")
+    .forEach((node, index) => {
+      const el = node as HTMLElement;
+      if (!el.hasAttribute("data-garrison-src")) {
+        el.setAttribute(
+          "data-garrison-src",
+          `media_carousel.${index}.image_url`,
+        );
+      }
+    });
+
+  document.querySelectorAll("a").forEach((anchorNode) => {
+    const anchor = anchorNode as HTMLAnchorElement;
+    if (anchor.hasAttribute("data-garrison-href")) return;
+    const signal =
+      `${anchor.textContent || ""} ${anchor.className || ""} ${anchor.getAttribute("href") || ""}`.toLowerCase();
+    if (/price|pricing|buy|membership|plan/.test(signal)) {
+      anchor.setAttribute("data-garrison-href", "brand.buy_classes_url");
+    } else if (/member|portal|account|login/.test(signal)) {
+      anchor.setAttribute("data-garrison-href", "brand.member_portal_url");
+    } else if (/program|workshop|challenge/.test(signal)) {
+      anchor.setAttribute("data-garrison-href", "brand.programs_url");
+    } else if (/map|location|direction|find us/.test(signal)) {
+      anchor.setAttribute("data-garrison-href", "brand.google_maps_url");
+    } else if (/book|trial|class|schedule|join|start|reserve/.test(signal)) {
+      anchor.setAttribute("data-garrison-href", "brand.book_class_url");
+    }
+  });
+
+  applyTextAndHrefBindings(payload);
+}
+
+function hasVisibleComponent(selector: string) {
+  return Array.from(document.querySelectorAll(selector)).some((node) => {
+    const el = node as HTMLElement;
+    const style = window.getComputedStyle(el);
+    const rect = el.getBoundingClientRect();
+    return (
+      style.display !== "none" &&
+      style.visibility !== "hidden" &&
+      rect.width > 0 &&
+      rect.height > 0
+    );
+  });
+}
+
 function canonicalFeatureName(value?: string | null) {
   if (!value) return "";
   return WEBSITE_FEATURE_ALIASES[value] || value;
@@ -295,8 +399,13 @@ function resolveBinding(payload: WebsiteFeaturePayload, path: string) {
     "brand.tagline": payload.tagline,
     "brand.hero_headline": payload.hero_headline,
     "brand.hero_cta_text": payload.hero_cta_text,
+    "brand.logo_url": payload.logo_url,
+    "brand.hero_url": payload.hero_url || payload.hero_image_url,
     "brand.book_class_url": payload.book_class_url,
     "brand.buy_classes_url": payload.buy_classes_url,
+    "brand.member_portal_url": payload.member_portal_url || payload.portal_url,
+    "brand.programs_url": payload.programs_url || payload.programs_widget_url,
+    "brand.google_maps_url": payload.google_maps_url,
     "brand.buy_classes_cta": payload.buy_classes_cta || "Buy Classes",
     "brand.promo_text": payload.promo_text,
     "brand.promo_cta": payload.promo_cta,
@@ -328,6 +437,14 @@ function resolveBinding(payload: WebsiteFeaturePayload, path: string) {
     if (acc === undefined || acc === null) return undefined;
     return acc[part];
   }, content);
+  if (value === undefined && path.endsWith(".image_url")) {
+    const itemPath = path.split(".").slice(0, -1);
+    const item = itemPath.reduce((acc: any, part) => {
+      if (acc === undefined || acc === null) return undefined;
+      return acc[part];
+    }, content);
+    return item?.image_url || item?.website_image_url || item?.src || item?.url;
+  }
   return value;
 }
 
@@ -346,6 +463,14 @@ function applyTextAndHrefBindings(payload: WebsiteFeaturePayload) {
     const value = resolveBinding(payload, path);
     if (value === undefined || value === null || value === "") return;
     el.href = String(value);
+  });
+
+  document.querySelectorAll("[data-garrison-src]").forEach((node) => {
+    const el = node as HTMLImageElement | HTMLVideoElement | HTMLSourceElement;
+    const path = el.getAttribute("data-garrison-src") || "";
+    const value = resolveBinding(payload, path);
+    if (value === undefined || value === null || value === "") return;
+    el.src = String(value);
   });
 }
 
@@ -391,6 +516,7 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
       });
     }
   });
+  ensureEditableMediaAndLinks(payload);
 
   const siteContent = payload.site_content || {};
 
@@ -418,7 +544,7 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
   );
   const faqRendered =
     featureEnabled(payload, "faq") &&
-    !document.querySelector('[data-garrison-component="faq"]');
+    !hasVisibleComponent('[data-garrison-component="faq"]');
   upsertUniversal(
     "g365-universal-faq",
     faqRendered,
@@ -505,7 +631,7 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
   );
   const pressRendered =
     featureEnabled(payload, "press_logos") &&
-    !document.querySelector(
+    !hasVisibleComponent(
       '[data-garrison-component="press_logos"], [data-garrison-component="press"]',
     );
   upsertUniversal(
@@ -705,7 +831,7 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
   const scheduleRendered =
     featureEnabled(payload, "class_schedule") &&
     scheduleItems.length > 0 &&
-    !document.querySelector(
+    !hasVisibleComponent(
       '[data-garrison-component="class_schedule"], [data-garrison-component="schedule"]',
     );
   upsertUniversal(
@@ -912,4 +1038,5 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
       });
     }
   });
+  ensureEditableMediaAndLinks(payload);
 }
