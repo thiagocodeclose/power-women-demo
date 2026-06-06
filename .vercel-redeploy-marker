@@ -1,6 +1,1 @@
-Redeploy marker for Vercel. This file intentionally changes when production
-needs a fresh commit after Git/Vercel integration drift.
-
-Last requested: 2026-06-06
-
-Commit: 2026-06-06T06:00:46-0300
+redeploy 2026-06-06T09:05:57Z
