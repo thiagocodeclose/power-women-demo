@@ -109,6 +109,50 @@ function ensureSectionMarkers(node: Element, feature: string) {
   }
 }
 
+function templateCopyKey(text: string) {
+  return text
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 72);
+}
+
+function ensureVisibleTextBindings() {
+  const selector =
+    "h1,h2,h3,h4,p,a,button,span,strong,li,label,small,figcaption";
+  document.querySelectorAll(selector).forEach((node) => {
+    const el = node as HTMLElement;
+    if (
+      el.hasAttribute("data-garrison-text") ||
+      el.hasAttribute("data-garrison-html") ||
+      el.hasAttribute("data-cg-el") ||
+      el.closest("[data-garrison-text],[data-garrison-html],[data-cg-el]") ||
+      el.closest("script,style,noscript,svg")
+    ) {
+      return;
+    }
+    if (
+      el.querySelector("[data-garrison-text],[data-garrison-html],[data-cg-el]")
+    ) {
+      return;
+    }
+    const text = (el.textContent || "").replace(/\s+/g, " ").trim();
+    if (
+      text.length < 3 ||
+      text.length > 160 ||
+      /^[×x•→←+\-.\d\s]+$/i.test(text) ||
+      /^(open|close|menu|loading|previous|next)$/i.test(text)
+    ) {
+      return;
+    }
+    const key = templateCopyKey(text);
+    if (!key) return;
+    el.setAttribute("data-garrison-text", "template_copy." + key);
+    el.setAttribute("data-garrison-auto-text", "true");
+  });
+}
+
 function ensureEditableMediaAndLinks(payload: WebsiteFeaturePayload) {
   const contentPaths: Record<string, string> = {
     classes_catalog: "classes",
@@ -449,6 +493,8 @@ function resolveBinding(payload: WebsiteFeaturePayload, path: string) {
 }
 
 function applyTextAndHrefBindings(payload: WebsiteFeaturePayload) {
+  ensureVisibleTextBindings();
+
   document.querySelectorAll("[data-garrison-text]").forEach((node) => {
     const el = node as HTMLElement;
     const path = el.getAttribute("data-garrison-text") || "";
@@ -787,7 +833,7 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
   upsertUniversal(
     "g365-universal-ai",
     featureEnabled(payload, "ai_agent"),
-    `<div class="g365-ai-agent" data-garrison-component="ai_agent">${payload.ai_agent_widget_url ? `<iframe src="${payload.ai_agent_widget_url}" title="AI sales agent"></iframe>` : `<div class="g365-ai-bubble"><div class="g365-ai-dot">AI</div><div><strong>${payload.ai_agent_name || "AI Sales Agent"}</strong><p>${payload.ai_agent_greeting || "Need help choosing a class or offer?"}</p></div></div>`}</div>`,
+    `<div class="g365-ai-agent" data-garrison-component="ai_agent">${payload.ai_agent_widget_url ? `<iframe src="${payload.ai_agent_widget_url}" title="AI sales agent"></iframe>` : `<div class="g365-ai-bubble"><div class="g365-ai-dot">AI</div><div><strong data-garrison-text="sections.ai_agent.title">${payload.ai_agent_name || "AI Sales Agent"}</strong><p data-garrison-text="sections.ai_agent.subtitle">${payload.ai_agent_greeting || "Need help choosing a class or offer?"}</p></div></div>`}</div>`,
   );
   markRenderedFeature("ai_agent", featureEnabled(payload, "ai_agent"));
 
