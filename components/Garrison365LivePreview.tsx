@@ -257,6 +257,9 @@ export function Garrison365LivePreview() {
 
       if (e.data.type === "GARRISON365_EDIT_MODE") {
         const active = !!e.data.payload?.active;
+        document.documentElement.dataset.garrison365EditMode = active
+          ? "true"
+          : "false";
         setEditMode(active);
         if (!active) {
           setOverlay(null);

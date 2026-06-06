@@ -5,9 +5,9 @@ import { Garrison365LivePreview } from "@/components/Garrison365LivePreview";
 import { TemplateSiteAdapter } from "@/components/TemplateSiteAdapter";
 import { buildCssVars, getGarrison365Config } from "@/lib/garrison365-config";
 export const metadata: Metadata = {
-  title: "POWER Women's Gym — Strength & Empowerment Training | Brooklyn, NY",
+  title: "POWER Pilates — Athletic Reformer Pilates Studio",
   description:
-    "Brooklyn's premier women's strength gym. Train strong, build confidence, and join a community of women who lift each other up — literally.",
+    "A high-energy reformer Pilates studio template built for athletic sculpt classes, intro offers, booking CTAs, and premium local conversion.",
 };
 
 export default async function RootLayout({

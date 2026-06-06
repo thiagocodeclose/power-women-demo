@@ -43,15 +43,15 @@ export default function Home() {
 
   const css = `
     :root {
-      --pw-primary: #7B2FBE;
-      --pw-primary-dark: #6320A0;
-      --pw-primary-light: #9B4FDE;
-      --pw-bg: #F8F0FF;
-      --pw-surface: #F0E6FF;
-      --pw-surface2: #E8D8FF;
-      --pw-text: #1A0A2E;
-      --pw-text-muted: #7A6A8A;
-      --pw-border: rgba(123,47,190,0.14);
+      --pw-primary: #7A1E3A;
+      --pw-primary-dark: #4F1024;
+      --pw-primary-light: #B24B6A;
+      --pw-bg: #FFF7F1;
+      --pw-surface: #F8E7E2;
+      --pw-surface2: #EED0CA;
+      --pw-text: #14070B;
+      --pw-text-muted: #7A5F65;
+      --pw-border: rgba(122,30,58,0.16);
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -452,7 +452,7 @@ export default function Home() {
       >
         <video ref={videoRef} autoPlay muted loop playsInline>
           <source
-            src="https://www.w3schools.com/html/mov_bbb.mp4"
+            src="https://static.vecteezy.com/system/resources/previews/044/587/091/watermarked/this-modern-pilates-studio-showcases-reformer-machine-offering-total-body-workout-experience-free-video.mp4"
             type="video/mp4"
           />
         </video>
@@ -465,7 +465,7 @@ export default function Home() {
             <span className="pw-accent">P</span>OWER
           </div>
           <div className="pw-wordmark-sub" data-garrison-text="brand.tagline">
-            Women&apos;s Strength Gym · Brooklyn, NY
+            Athletic Sculpt Pilates · Reformer Studio
           </div>
         </div>
         <div className="pw-scroll-hint">
@@ -483,9 +483,9 @@ export default function Home() {
             data-garrison-text="brand.hero_headline"
             className="pw-intro-headline pw-head reveal"
           >
-            Train Strong.
+            Where Strength
             <br />
-            Live Loud.
+            Meets Stillness.
           </h2>
           <p
             data-cg-el="hero_subtitle"

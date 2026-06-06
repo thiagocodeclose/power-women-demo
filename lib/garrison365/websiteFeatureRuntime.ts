@@ -368,6 +368,10 @@ function upsertUniversal(id: string, enabled: boolean, html: string) {
   return wrapper;
 }
 
+function isBuilderEditMode() {
+  return document.documentElement.dataset.garrison365EditMode === "true";
+}
+
 function sectionStyle(payload: WebsiteFeaturePayload, key: string) {
   return (payload.section_styles && payload.section_styles[key]) || {};
 }
@@ -830,7 +834,7 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
     "g365-universal-intro-offer",
     featureEnabled(payload, "promo_banner") &&
       payload.show_intro_offer !== false,
-    `<div class="g365-intro-modal active" data-garrison-component="intro_offer"><div class="g365-intro-card" style="--g365-offer-bg:${payload.intro_offer_bg_color || "#fff"};--g365-offer-text:${payload.intro_offer_text_color || "#241f5f"}"><button class="g365-intro-close" type="button">x</button><h2 data-garrison-text="brand.intro_offer.title">${payload.intro_offer_title || "Exclusive Intro Offer"}<br>${payload.intro_offer_badge || "Save Today"}</h2><p data-garrison-text="brand.intro_offer.subtitle">${payload.intro_offer_subtitle || "Enter your email to claim your exclusive offer."}</p><a data-garrison-text="brand.intro_offer.cta" href="${payload.book_class_url || payload.promo_url || "#"}">${payload.intro_offer_cta || "Claim my offer"}</a></div></div>`,
+    `<div class="g365-intro-modal${isBuilderEditMode() ? "" : " active"}" data-garrison-component="intro_offer"><div class="g365-intro-card" style="--g365-offer-bg:${payload.intro_offer_bg_color || "#fff"};--g365-offer-text:${payload.intro_offer_text_color || "#241f5f"}"><button class="g365-intro-close" type="button">×</button><h2 data-garrison-text="brand.intro_offer.title">${payload.intro_offer_title || "Exclusive Intro Offer"}<br>${payload.intro_offer_badge || "Save Today"}</h2><p data-garrison-text="brand.intro_offer.subtitle">${payload.intro_offer_subtitle || "Enter your email to claim your exclusive offer."}</p><a data-garrison-text="brand.intro_offer.cta" href="${payload.book_class_url || payload.promo_url || "#"}">${payload.intro_offer_cta || "Claim my offer"}</a></div></div>`,
   );
   markRenderedFeature(
     "intro_offer",
