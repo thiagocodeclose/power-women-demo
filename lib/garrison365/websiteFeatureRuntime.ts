@@ -140,7 +140,7 @@ function ensureVisibleTextBindings() {
     const text = (el.textContent || "").replace(/\s+/g, " ").trim();
     if (
       text.length < 3 ||
-      text.length > 160 ||
+      text.length > 600 ||
       /^[×x•→←+\-.\d\s]+$/i.test(text) ||
       /^(open|close|menu|loading|previous|next)$/i.test(text)
     ) {
