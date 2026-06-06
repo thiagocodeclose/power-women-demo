@@ -1101,4 +1101,5 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
     }
   });
   ensureEditableMediaAndLinks(payload);
+  applyTextAndHrefBindings(payload);
 }
