@@ -131,7 +131,7 @@ function templateCopyKey(text: string) {
 
 function ensureVisibleTextBindings() {
   const selector =
-    "h1,h2,h3,h4,p,a,button,span,strong,li,label,small,figcaption";
+    "h1,h2,h3,h4,h5,h6,p,a,button,span,strong,em,li,label,small,figcaption,blockquote";
   document.querySelectorAll(selector).forEach((node) => {
     const el = node as HTMLElement;
     if (
@@ -161,6 +161,55 @@ function ensureVisibleTextBindings() {
     if (!key) return;
     el.setAttribute("data-garrison-text", "template_copy." + key);
     el.setAttribute("data-garrison-auto-text", "true");
+  });
+}
+
+function ensureCanvasEditableMarkers() {
+  const selector =
+    "h1,h2,h3,h4,h5,h6,p,a,button,span,strong,em,li,label,small,figcaption,blockquote";
+  const used = new Set(
+    Array.from(document.querySelectorAll("[data-cg-el]"))
+      .map((node) => (node as HTMLElement).getAttribute("data-cg-el"))
+      .filter(Boolean) as string[],
+  );
+  document.querySelectorAll(selector).forEach((node) => {
+    const el = node as HTMLElement;
+    if (
+      el.hasAttribute("data-cg-el") ||
+      el.closest("[data-cg-el]") ||
+      el.closest("script,style,noscript,svg,[hidden],[aria-hidden='true']")
+    ) {
+      return;
+    }
+    if (el.querySelector("[data-cg-el]")) return;
+    const text = (el.textContent || "").replace(/\s+/g, " ").trim();
+    if (
+      text.length < 3 ||
+      text.length > 600 ||
+      /^[×x•→←+\-.\d\s]+$/i.test(text) ||
+      /^(open|close|menu|loading|previous|next)$/i.test(text)
+    ) {
+      return;
+    }
+    const binding =
+      el.getAttribute("data-garrison-text") ||
+      el.getAttribute("data-garrison-href") ||
+      "template_copy." + templateCopyKey(text);
+    let id = binding
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .slice(0, 72);
+    if (!id) id = "editable_text";
+    let uniqueId = id;
+    let suffix = 2;
+    while (used.has(uniqueId)) {
+      uniqueId = `${id}_${suffix}`;
+      suffix += 1;
+    }
+    used.add(uniqueId);
+    el.setAttribute("data-cg-el", uniqueId);
+    el.setAttribute("data-garrison-auto-canvas", "true");
   });
 }
 
@@ -1117,4 +1166,5 @@ export function applyWebsiteFeatureRuntime(payload: WebsiteFeaturePayload) {
   });
   ensureEditableMediaAndLinks(payload);
   applyTextAndHrefBindings(payload);
+  ensureCanvasEditableMarkers();
 }
