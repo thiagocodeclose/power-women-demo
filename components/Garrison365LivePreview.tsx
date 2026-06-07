@@ -709,9 +709,25 @@ export function Garrison365LivePreview() {
       e.preventDefault();
       e.stopPropagation();
       const id = el.getAttribute("data-cg-el")!;
+      const rect = el.getBoundingClientRect();
+      const style = window.getComputedStyle(el);
       refreshOverlay(id);
       window.parent.postMessage(
-        { type: "GARRISON365_ELEMENT_CLICK", payload: { id } },
+        {
+          type: "GARRISON365_ELEMENT_CLICK",
+          payload: {
+            id,
+            computedColor: style.color,
+            rect: {
+              top: rect.top,
+              left: rect.left,
+              width: rect.width,
+              height: rect.height,
+              viewportWidth: window.innerWidth,
+              viewportHeight: window.innerHeight,
+            },
+          },
+        },
         "*",
       );
     };
