@@ -280,6 +280,11 @@ export function Garrison365LivePreview() {
                   type: string;
                   defaults?: Record<string, unknown>;
                   content?: string;
+                  color?: string;
+                  fontSize?: number;
+                  fontFamily?: string;
+                  fontWeight?: string;
+                  textAlign?: string;
                 }
               >();
               const makeLabel = (id: string) => {
@@ -320,6 +325,7 @@ export function Garrison365LivePreview() {
                   const domEl = document.querySelector(
                     `[data-cg-el="${id}"]`,
                   ) as HTMLElement | null;
+                  const style = domEl ? window.getComputedStyle(domEl) : null;
                   const isImage =
                     domEl?.tagName === "IMG" || !!domEl?.querySelector("img");
                   const currentContent =
@@ -333,6 +339,11 @@ export function Garrison365LivePreview() {
                     type: data.meta?.type ?? "text",
                     defaults: data.defaults,
                     content: currentContent,
+                    color: style?.color,
+                    fontSize: style ? Number.parseFloat(style.fontSize) : undefined,
+                    fontFamily: style?.fontFamily?.split(",")[0]?.replace(/['"]/g, ""),
+                    fontWeight: style?.fontWeight,
+                    textAlign: style?.textAlign,
                   });
                 });
               }
@@ -355,12 +366,18 @@ export function Garrison365LivePreview() {
                   const currentContent = !isImage
                     ? el.innerText?.trim() || undefined
                     : undefined;
+                  const style = window.getComputedStyle(el);
                   elementsMap.set(id, {
                     id,
                     section: id.split("_")[0],
                     label: makeLabel(id),
                     type,
                     content: currentContent,
+                    color: style.color,
+                    fontSize: Number.parseFloat(style.fontSize),
+                    fontFamily: style.fontFamily.split(",")[0]?.replace(/['"]/g, ""),
+                    fontWeight: style.fontWeight,
+                    textAlign: style.textAlign,
                   });
                 });
 
@@ -711,13 +728,25 @@ export function Garrison365LivePreview() {
       const id = el.getAttribute("data-cg-el")!;
       const rect = el.getBoundingClientRect();
       const style = window.getComputedStyle(el);
+      const isImage = el.tagName === "IMG" || !!el.querySelector("img");
       refreshOverlay(id);
       window.parent.postMessage(
         {
           type: "GARRISON365_ELEMENT_CLICK",
           payload: {
             id,
+            content: isImage ? undefined : el.innerText?.trim(),
+            elementType:
+              isImage
+                ? "image"
+                : el.tagName === "A" || el.tagName === "BUTTON" || el.getAttribute("role") === "button"
+                  ? "button"
+                  : "text",
             computedColor: style.color,
+            fontSize: Number.parseFloat(style.fontSize),
+            fontFamily: style.fontFamily.split(",")[0]?.replace(/['"]/g, ""),
+            fontWeight: style.fontWeight,
+            textAlign: style.textAlign,
             rect: {
               top: rect.top,
               left: rect.left,
