@@ -832,6 +832,25 @@ export function Garrison365LivePreview() {
     };
   }, [overlay, refreshOverlay]);
 
+  useEffect(() => {
+    if (!editMode) return;
+    let lastSent = 0;
+    const notifyScroll = () => {
+      const now = Date.now();
+      if (now - lastSent < 160) return;
+      lastSent = now;
+      window.parent?.postMessage(
+        {
+          type: "GARRISON365_PREVIEW_SCROLL",
+          payload: { scrollY: window.scrollY },
+        },
+        "*",
+      );
+    };
+    window.addEventListener("scroll", notifyScroll, { passive: true });
+    return () => window.removeEventListener("scroll", notifyScroll);
+  }, [editMode]);
+
   // ── Global mousemove + mouseup for drag ─────────────────────────────────
 
   useEffect(() => {
