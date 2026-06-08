@@ -903,18 +903,100 @@ export function Garrison365LivePreview() {
   useEffect(() => {
     if (!editMode) return;
     let lastSent = 0;
+    let lastActiveComponent = "";
+    const sectionTargets: Array<{ component: string; selectors: string[] }> = [
+      {
+        component: "hero",
+        selectors: [
+          '[data-cg-el="hero_headline_1"]',
+          '[data-cg-el="hero_headline"]',
+          '[data-garrison-component="hero"]',
+          "main",
+        ],
+      },
+      {
+        component: "classes",
+        selectors: [
+          '[data-garrison-component="classes_catalog"]',
+          '[data-garrison-component="classes"]',
+          '[data-garrison-widget="classes_catalog"]',
+          '[data-garrison-widget="schedule"]',
+        ],
+      },
+      {
+        component: "pricing",
+        selectors: ['[data-garrison-component="pricing"]', '[data-garrison-widget="pricing"]'],
+      },
+      {
+        component: "faq",
+        selectors: ['[data-garrison-component="faq"]', '[data-garrison-widget="faq"]'],
+      },
+      {
+        component: "reviews",
+        selectors: [
+          '[data-garrison-component="reviews"]',
+          '[data-garrison-component="testimonials"]',
+          '[data-garrison-widget="reviews"]',
+        ],
+      },
+      {
+        component: "location",
+        selectors: [
+          '[data-garrison-component="location_map"]',
+          '[data-garrison-component="location"]',
+          '[data-garrison-widget="location_map"]',
+        ],
+      },
+      {
+        component: "promo",
+        selectors: [
+          '[data-garrison-component="promo_banner"]',
+          '[data-garrison-component="intro_offer"]',
+          '[data-garrison-widget="promo_banner"]',
+          '[data-garrison-widget="lead_capture"]',
+        ],
+      },
+    ];
+    const findActiveComponent = () => {
+      const viewportAnchor = window.innerHeight * 0.34;
+      const candidates = sectionTargets
+        .map(({ component, selectors }) => {
+          const el = selectors
+            .map((selector) => document.querySelector(selector))
+            .find((node): node is HTMLElement => node instanceof HTMLElement);
+          if (!el) return null;
+          const rect = el.getBoundingClientRect();
+          if (rect.height <= 0 || rect.bottom < 0 || rect.top > window.innerHeight) return null;
+          return { component, distance: Math.abs(rect.top - viewportAnchor), top: rect.top };
+        })
+        .filter((item): item is { component: string; distance: number; top: number } => !!item);
+      if (!candidates.length) return lastActiveComponent || "hero";
+      return candidates.sort((a, b) => a.distance - b.distance || a.top - b.top)[0].component;
+    };
     const notifyScroll = () => {
       const now = Date.now();
+      const activeComponent = findActiveComponent();
+      if (activeComponent !== lastActiveComponent) {
+        lastActiveComponent = activeComponent;
+        window.parent?.postMessage(
+          {
+            type: "GARRISON365_ACTIVE_COMPONENT",
+            payload: { component: activeComponent },
+          },
+          "*",
+        );
+      }
       if (now - lastSent < 160) return;
       lastSent = now;
       window.parent?.postMessage(
         {
           type: "GARRISON365_PREVIEW_SCROLL",
-          payload: { scrollY: window.scrollY },
+          payload: { scrollY: window.scrollY, activeComponent },
         },
         "*",
       );
     };
+    notifyScroll();
     window.addEventListener("scroll", notifyScroll, { passive: true });
     return () => window.removeEventListener("scroll", notifyScroll);
   }, [editMode]);
