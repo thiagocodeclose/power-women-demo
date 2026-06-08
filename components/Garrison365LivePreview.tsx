@@ -435,6 +435,74 @@ export function Garrison365LivePreview() {
         return;
       }
 
+      if (e.data.type === "GARRISON365_SCROLL_TO_COMPONENT") {
+        const component = e.data.payload?.component as string | undefined;
+        if (!component) return;
+        const aliases: Record<string, string[]> = {
+          hero: [
+            '[data-cg-el="hero_headline_1"]',
+            '[data-cg-el="hero_headline"]',
+            '[data-garrison-component="hero"]',
+            "main",
+          ],
+          classes: [
+            '[data-garrison-component="classes_catalog"]',
+            '[data-garrison-component="classes"]',
+            '[data-garrison-widget="classes_catalog"]',
+            '[data-garrison-widget="schedule"]',
+          ],
+          schedule: [
+            '[data-garrison-component="class_schedule"]',
+            '[data-garrison-component="schedule"]',
+            '[data-garrison-widget="class_schedule"]',
+            '[data-garrison-widget="schedule"]',
+          ],
+          pricing: [
+            '[data-garrison-component="pricing"]',
+            '[data-garrison-widget="pricing"]',
+          ],
+          faq: ['[data-garrison-component="faq"]', '[data-garrison-widget="faq"]'],
+          reviews: [
+            '[data-garrison-component="reviews"]',
+            '[data-garrison-component="testimonials"]',
+            '[data-garrison-widget="reviews"]',
+          ],
+          location: [
+            '[data-garrison-component="location_map"]',
+            '[data-garrison-component="location"]',
+            '[data-garrison-widget="location_map"]',
+          ],
+          promo: [
+            '[data-garrison-component="promo_banner"]',
+            '[data-garrison-component="intro_offer"]',
+            '[data-garrison-widget="promo_banner"]',
+            '[data-garrison-widget="lead_capture"]',
+          ],
+          instructors: [
+            '[data-garrison-component="instructors"]',
+            '[data-garrison-widget="instructors"]',
+          ],
+          press: [
+            '[data-garrison-component="press_logos"]',
+            '[data-garrison-component="press"]',
+          ],
+        };
+        const selectors = aliases[component] ?? [
+          `[data-garrison-component="${component}"]`,
+          `[data-garrison-widget="${component}"]`,
+          `#${component}`,
+        ];
+        const target = selectors
+          .map((selector) => document.querySelector(selector))
+          .find((el): el is HTMLElement => el instanceof HTMLElement);
+        if (target) {
+          setOverlay(null);
+          setHoverOverlay(null);
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+        return;
+      }
+
       if (e.data.type === "GARRISON365_INLINE_EDIT_REQUEST") {
         const id = e.data.payload?.id as string | undefined;
         if (!id) return;
